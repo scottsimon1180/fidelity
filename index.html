@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+/>
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>Pixel Compare</title>
+
+<style>
+  :root{
+    --bg:#0b0b0c;
+    --card:#141416;
+    --card-2:#1b1b1f;
+    --text:#f5f5f7;
+    --sub:#8e8e93;
+    --line:rgba(255,255,255,0.08);
+    --line-strong:rgba(255,255,255,0.12);
+    --green:#32d74b;
+    --red:#ff453a;
+    --shadow:0 18px 40px rgba(0,0,0,0.35);
+    --radius-xl:22px;
+    --radius-lg:16px;
+  }
+
+  *{
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+  }
+
+  html,body{
+    margin:0;
+    padding:0;
+    width:100%;
+    height:100%;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;
+    overflow:hidden;
+  }
+
+  body{
+    min-height:100vh;
+    min-height:100dvh;
+  }
+
+  button,
+  input,
+  canvas,
+  img{
+    font:inherit;
+    touch-action:manipulation;
+  }
+
+  .app{
+    width:100%;
+    max-width:430px;
+    height:100vh;
+    height:100dvh;
+    margin:0 auto;
+    padding:
+      max(10px, env(safe-area-inset-top))
+      12px
+      max(10px, env(safe-area-inset-bottom))
+      12px;
+    display:grid;
+    grid-template-rows:
+      minmax(0, 1.76fr)
+      minmax(84px, 0.58fr)
+      auto
+      auto;
+    gap:10px;
+    overflow:hidden;
+    transition:grid-template-rows 0.2s ease;
+  }
+
+  .app.compact-images{
+    grid-template-rows:
+      minmax(0, 1.98fr)
+      minmax(84px, 0.56fr)
+      auto
+      auto;
+  }
+
+  .frame{
+    min-width:0;
+    min-height:0;
+    overflow:hidden;
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00)), var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius-xl);
+    box-shadow:var(--shadow);
+  }
+
+  /* =========================================================
+     Frame 1
+     ========================================================= */
+  .diff-frame-wrap{
+    height:100%;
+    min-height:0;
+    padding:10px;
+    display:grid;
+    grid-template-rows:minmax(0, 1fr) auto;
+    gap:10px;
+  }
+
+  .diff-view{
+    min-width:0;
+    min-height:0;
+    position:relative;
+    background:#0d0d0f;
+    border:1px solid var(--line);
+    border-radius:16px;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+  }
+
+  .diff-view canvas{
+    width:100%;
+    height:100%;
+    display:block;
+    object-fit:contain;
+  }
+
+  .diff-placeholder{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:16px;
+    color:var(--sub);
+    font-size:13px;
+    line-height:1.35;
+    pointer-events:none;
+  }
+
+  .progress-wrap{
+    display:grid;
+    gap:7px;
+  }
+
+  .progress-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    min-width:0;
+    font-size:13px;
+    line-height:1;
+  }
+
+  .status{
+    min-width:0;
+    flex:1 1 auto;
+    color:var(--sub);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .percent{
+    flex:0 0 auto;
+    color:var(--text);
+    font-weight:700;
+    font-variant-numeric:tabular-nums;
+  }
+
+  .bar{
+    width:100%;
+    height:12px;
+    border-radius:999px;
+    background:#0d0d0f;
+    border:1px solid var(--line);
+    overflow:hidden;
+  }
+
+  .bar-fill{
+    width:0%;
+    height:100%;
+    border-radius:999px;
+    background:linear-gradient(
+      90deg,
+      rgba(50,215,75,0.88) 0%,
+      rgba(50,215,75,1) 48%,
+      rgba(120,255,145,0.96) 100%
+    );
+    box-shadow:0 0 20px rgba(50,215,75,0.28);
+    transition:width 0.08s linear;
+  }
+
+  .progress-bottom{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    min-width:0;
+    color:var(--sub);
+    font-size:12px;
+    font-variant-numeric:tabular-nums;
+  }
+
+  .progress-bottom > div{
+    min-width:0;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  /* =========================================================
+     Frame 2
+     ========================================================= */
+  .results-wrap{
+    height:100%;
+    min-height:0;
+    padding:10px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+
+  .metric{
+    min-width:0;
+    min-height:0;
+    overflow:hidden;
+    border-radius:16px;
+    padding:10px 10px 9px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:6px;
+    background:#0d0d0f;
+    border:1px solid var(--line);
+  }
+
+  .metric.red{
+    border-color:rgba(255,69,58,0.18);
+    background:linear-gradient(180deg, rgba(255,69,58,0.04), rgba(255,69,58,0.01));
+  }
+
+  .metric.green{
+    border-color:rgba(50,215,75,0.18);
+    background:linear-gradient(180deg, rgba(50,215,75,0.04), rgba(50,215,75,0.01));
+  }
+
+  .metric-label{
+    margin:0;
+    color:var(--sub);
+    font-size:11px;
+    line-height:1.1;
+    font-weight:800;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .metric-value{
+    margin:0;
+    min-width:0;
+    font-size:clamp(18px, 5.3vw, 28px);
+    line-height:1;
+    font-weight:800;
+    letter-spacing:-0.03em;
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .metric.red .metric-value{ color:var(--red); }
+  .metric.green .metric-value{ color:var(--green); }
+
+  /* =========================================================
+     Frame 3
+     ========================================================= */
+  .images-wrap{
+    padding:10px;
+    display:grid;
+    grid-template-rows:auto auto;
+    gap:10px;
+    align-content:start;
+  }
+
+  .image-row{
+    min-width:0;
+    display:grid;
+    grid-template-columns:minmax(0, 1.48fr) minmax(92px, 0.82fr);
+    gap:10px;
+    align-items:stretch;
+  }
+
+  .image-btn{
+    appearance:none;
+    border:none;
+    width:100%;
+    min-width:0;
+    border-radius:16px;
+    cursor:pointer;
+    display:block;
+    overflow:hidden;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.015)),
+      #111216;
+    border:1px solid var(--line-strong);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.035),
+      inset 0 -1px 0 rgba(0,0,0,0.30);
+    padding:0;
+    transition:
+      background 0.18s ease,
+      border-color 0.18s ease;
+  }
+
+  .image-btn:active,
+  .action-btn:active{
+    transform:scale(0.995);
+    filter:brightness(0.97);
+  }
+
+  .image-btn:disabled,
+  .action-btn:disabled{
+    opacity:0.45;
+    cursor:not-allowed;
+  }
+
+  .image-btn.empty{
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)),
+      #15161a;
+  }
+
+  .image-btn.filled{
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012)),
+      #101115;
+    border-color:rgba(255,255,255,0.13);
+  }
+
+  .image-btn-inner{
+    width:100%;
+    min-width:0;
+    display:grid;
+    grid-template-columns:auto 1fr;
+    align-items:center;
+    gap:10px;
+  }
+
+  .image-btn.empty .image-btn-inner{
+    min-height:68px;
+    grid-template-columns:1fr;
+    justify-items:start;
+    padding:12px 14px;
+  }
+
+  .app.compact-images .image-btn.filled .image-btn-inner{
+    min-height:48px;
+    padding:6px 9px;
+    gap:8px;
+  }
+
+  .app:not(.compact-images) .image-btn.filled .image-btn-inner{
+    min-height:54px;
+    padding:8px 10px;
+  }
+
+  .image-thumb{
+    width:36px;
+    height:36px;
+    border-radius:10px;
+    overflow:hidden;
+    background:#09090b;
+    border:1px solid var(--line);
+    flex:0 0 auto;
+  }
+
+  .image-thumb img{
+    width:100%;
+    height:100%;
+    display:block;
+    object-fit:cover;
+  }
+
+  .image-btn-text{
+    min-width:0;
+    text-align:left;
+    display:grid;
+    gap:2px;
+  }
+
+  .image-btn-main{
+    color:var(--text);
+    font-size:13px;
+    line-height:1.2;
+    font-weight:750;
+    letter-spacing:-0.01em;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .image-btn-sub{
+    color:var(--sub);
+    font-size:11px;
+    line-height:1.15;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .image-btn.empty .image-btn-main{
+    font-size:16px;
+    font-weight:760;
+  }
+
+  .image-meta{
+    min-width:0;
+    border-radius:16px;
+    padding:10px 10px 8px;
+    background:var(--card-2);
+    border:1px solid var(--line);
+    display:grid;
+    align-content:center;
+    gap:6px;
+  }
+
+  .app.compact-images .image-meta{
+    padding:8px 10px 7px;
+  }
+
+  .meta-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:8px;
+    min-width:0;
+    font-size:11px;
+    line-height:1.15;
+  }
+
+  .meta-key{
+    color:var(--sub);
+    flex:0 0 auto;
+  }
+
+  .meta-value{
+    min-width:0;
+    text-align:right;
+    color:var(--text);
+    word-break:break-word;
+  }
+
+  .meta-value.empty{
+    color:transparent;
+  }
+
+  /* =========================================================
+     Actions
+     ========================================================= */
+  .actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+
+  .action-btn{
+    appearance:none;
+    border:none;
+    min-height:46px;
+    border-radius:15px;
+    font-size:15px;
+    font-weight:800;
+    cursor:pointer;
+  }
+
+  .action-primary{
+    background:var(--green);
+    color:#07110a;
+  }
+
+  .action-danger{
+    background:#2c1a1a;
+    color:#ff8b84;
+  }
+
+  .hidden-input{
+    display:none;
+  }
+
+  /* =========================================================
+     Fullscreen viewer
+     ========================================================= */
+  .viewer{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.96);
+    z-index:9999;
+    display:none;
+    padding:
+      max(10px, env(safe-area-inset-top))
+      10px
+      max(10px, env(safe-area-inset-bottom))
+      10px;
+  }
+
+  .viewer.open{
+    display:block;
+  }
+
+  .viewer-top{
+    height:52px;
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    margin-bottom:8px;
+  }
+
+  .viewer-close{
+    appearance:none;
+    border:none;
+    min-width:44px;
+    height:44px;
+    border-radius:999px;
+    background:rgba(255,255,255,0.10);
+    color:#fff;
+    font-size:24px;
+    line-height:1;
+    font-weight:500;
+  }
+
+  .viewer-stage{
+    position:relative;
+    width:100%;
+    height:calc(100% - 60px);
+    overflow:hidden;
+    touch-action:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .viewer-transform{
+    transform-origin:0 0;
+    will-change:transform;
+  }
+
+  .viewer-image{
+    display:block;
+    max-width:none;
+    max-height:none;
+    width:auto;
+    height:auto;
+    image-rendering:pixelated;
+    image-rendering:crisp-edges;
+    user-select:none;
+    -webkit-user-drag:none;
+    pointer-events:none;
+  }
+
+  @media (max-width:380px){
+    .app{
+      padding:
+        max(8px, env(safe-area-inset-top))
+        10px
+        max(8px, env(safe-area-inset-bottom))
+        10px;
+      gap:8px;
+    }
+
+    .diff-frame-wrap,
+    .results-wrap,
+    .images-wrap{
+      padding:8px;
+      gap:8px;
+    }
+
+    .metric-value{
+      font-size:clamp(17px, 5vw, 24px);
+    }
+
+    .image-row{
+      grid-template-columns:minmax(0, 1.36fr) minmax(82px, 0.84fr);
+      gap:8px;
+    }
+
+    .image-btn.empty .image-btn-inner{
+      min-height:62px;
+      padding:11px 12px;
+    }
+
+    .app.compact-images .image-btn.filled .image-btn-inner{
+      min-height:46px;
+      padding:6px 8px;
+      gap:7px;
+    }
+
+    .app:not(.compact-images) .image-btn.filled .image-btn-inner{
+      min-height:50px;
+      padding:7px 9px;
+      gap:8px;
+    }
+
+    .image-thumb{
+      width:34px;
+      height:34px;
+    }
+
+    .image-btn.empty .image-btn-main{
+      font-size:15px;
+    }
+
+    .image-btn-main{
+      font-size:12px;
+    }
+  }
+</style>
+</head>
+<body>
+  <div id="app" class="app">
+
+    <div class="frame">
+      <div class="diff-frame-wrap">
+        <div id="diffView" class="diff-view">
+          <canvas id="diffCanvas"></canvas>
+          <div id="diffPlaceholder" class="diff-placeholder">Difference image will appear here</div>
+        </div>
+
+        <div class="progress-wrap">
+          <div class="progress-top">
+            <div id="statusText" class="status">Waiting for images…</div>
+            <div id="percentText" class="percent">0%</div>
+          </div>
+
+          <div class="bar" aria-label="Comparison progress">
+            <div id="barFill" class="bar-fill"></div>
+          </div>
+
+          <div class="progress-bottom">
+            <div id="rowsText">0 / 0 rows</div>
+            <div id="pixelsScannedText">0 pixels</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="frame">
+      <div class="results-wrap">
+        <div class="metric red">
+          <p class="metric-label">Deviant Pixels</p>
+          <p id="deviantPixelsValue" class="metric-value">0</p>
+        </div>
+
+        <div class="metric green">
+          <p class="metric-label">Fidelity</p>
+          <p id="fidelityValue" class="metric-value">100%</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="frame">
+      <div class="images-wrap">
+
+        <div class="image-row">
+          <button id="pickBtnA" class="image-btn empty" type="button">
+            <span class="image-btn-inner">
+              <span class="image-btn-text">
+                <span class="image-btn-main">Image A</span>
+              </span>
+            </span>
+          </button>
+          <input id="fileInputA" type="file" class="hidden-input" accept="image/*" />
+
+          <div class="image-meta">
+            <div class="meta-row">
+              <div class="meta-key">Size</div>
+              <div id="fileSizeA" class="meta-value empty"></div>
+            </div>
+            <div class="meta-row">
+              <div class="meta-key">Res</div>
+              <div id="fileResA" class="meta-value empty"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="image-row">
+          <button id="pickBtnB" class="image-btn empty" type="button">
+            <span class="image-btn-inner">
+              <span class="image-btn-text">
+                <span class="image-btn-main">Image B</span>
+              </span>
+            </span>
+          </button>
+          <input id="fileInputB" type="file" class="hidden-input" accept="image/*" />
+
+          <div class="image-meta">
+            <div class="meta-row">
+              <div class="meta-key">Size</div>
+              <div id="fileSizeB" class="meta-value empty"></div>
+            </div>
+            <div class="meta-row">
+              <div class="meta-key">Res</div>
+              <div id="fileResB" class="meta-value empty"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="compareBtn" class="action-btn action-primary" type="button" disabled>Compare</button>
+      <button id="resetBtn" class="action-btn action-danger" type="button">Reset</button>
+    </div>
+  </div>
+
+  <div id="viewer" class="viewer" aria-hidden="true">
+    <div class="viewer-top">
+      <button id="viewerClose" class="viewer-close" type="button">×</button>
+    </div>
+    <div id="viewerStage" class="viewer-stage">
+      <div id="viewerTransform" class="viewer-transform">
+        <img id="viewerImage" class="viewer-image" alt="Comparison image">
+      </div>
+    </div>
+  </div>
+
+<script>
+const app = document.getElementById("app");
+
+const pickBtnA = document.getElementById("pickBtnA");
+const pickBtnB = document.getElementById("pickBtnB");
+const fileInputA = document.getElementById("fileInputA");
+const fileInputB = document.getElementById("fileInputB");
+
+const fileSizeA = document.getElementById("fileSizeA");
+const fileResA  = document.getElementById("fileResA");
+
+const fileSizeB = document.getElementById("fileSizeB");
+const fileResB  = document.getElementById("fileResB");
+
+const statusText = document.getElementById("statusText");
+const percentText = document.getElementById("percentText");
+const barFill = document.getElementById("barFill");
+const rowsText = document.getElementById("rowsText");
+const pixelsScannedText = document.getElementById("pixelsScannedText");
+
+const deviantPixelsValue = document.getElementById("deviantPixelsValue");
+const fidelityValue = document.getElementById("fidelityValue");
+
+const compareBtn = document.getElementById("compareBtn");
+const resetBtn = document.getElementById("resetBtn");
+
+const diffView = document.getElementById("diffView");
+const diffCanvas = document.getElementById("diffCanvas");
+const diffPlaceholder = document.getElementById("diffPlaceholder");
+const diffCtx = diffCanvas.getContext("2d", { willReadFrequently: true });
+
+const viewer = document.getElementById("viewer");
+const viewerClose = document.getElementById("viewerClose");
+const viewerStage = document.getElementById("viewerStage");
+const viewerTransform = document.getElementById("viewerTransform");
+const viewerImage = document.getElementById("viewerImage");
+
+let imageStateA = null;
+let imageStateB = null;
+let isProcessing = false;
+let diffImageURL = "";
+
+/* Viewer state */
+let viewerOpen = false;
+let currentScale = 1;
+let minScale = 1;
+let maxScale = 20;
+let translateX = 0;
+let translateY = 0;
+let startTranslateX = 0;
+let startTranslateY = 0;
+let isDragging = false;
+let dragStartX = 0;
+let dragStartY = 0;
+let pinchStartDistance = 0;
+let pinchStartScale = 1;
+let pinchCenterX = 0;
+let pinchCenterY = 0;
+let lastTapTime = 0;
+
+const ROW_BATCH = 24;
+
+pickBtnA.addEventListener("click", () => {
+  if (!isProcessing) fileInputA.click();
+});
+
+pickBtnB.addEventListener("click", () => {
+  if (!isProcessing) fileInputB.click();
+});
+
+fileInputA.addEventListener("change", async () => {
+  const file = fileInputA.files?.[0] || null;
+  imageStateA = await handleImageSelection(file, "A");
+  refreshCompareState();
+  updateCompactLayoutState();
+});
+
+fileInputB.addEventListener("change", async () => {
+  const file = fileInputB.files?.[0] || null;
+  imageStateB = await handleImageSelection(file, "B");
+  refreshCompareState();
+  updateCompactLayoutState();
+});
+
+compareBtn.addEventListener("click", async () => {
+  if (!isProcessing && imageStateA && imageStateB) {
+    await compareImages();
+  }
+});
+
+resetBtn.addEventListener("click", () => {
+  if (!isProcessing) resetAll();
+});
+
+diffView.addEventListener("click", () => {
+  if (diffCanvas.width <= 1 || diffCanvas.height <= 1 || !diffImageURL) return;
+  openViewer();
+});
+
+viewerClose.addEventListener("click", closeViewer);
+
+viewer.addEventListener("click", (e) => {
+  if (e.target === viewer) closeViewer();
+});
+
+async function handleImageSelection(file, which) {
+  resetComparisonOutputs();
+
+  if (!file) {
+    clearImageUI(which);
+    return null;
+  }
+
+  try {
+    const loaded = await loadImageFromFile(file);
+    setImageUI(which, file, loaded);
+
+    statusText.textContent = (imageStateA || imageStateB) ? "Ready to compare" : "Waiting for images…";
+
+    return {
+      file,
+      img: loaded.img,
+      url: loaded.url,
+      width: loaded.img.naturalWidth,
+      height: loaded.img.naturalHeight
+    };
+  } catch (error) {
+    clearImageUI(which);
+    statusText.textContent = "Failed to load image";
+    return null;
+  }
+}
+
+function loadImageFromFile(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+
+    img.onload = () => resolve({ img, url });
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Image load failed"));
+    };
+
+    img.src = url;
+  });
+}
+
+async function compareImages() {
+  if (!imageStateA || !imageStateB) return;
+
+  isProcessing = true;
+  setButtonsDuringProcessing(true);
+  resetComparisonOutputs();
+
+  const widthA = imageStateA.width;
+  const heightA = imageStateA.height;
+  const widthB = imageStateB.width;
+  const heightB = imageStateB.height;
+
+  if (widthA !== widthB || heightA !== heightB) {
+    statusText.textContent = "Resolution mismatch";
+    percentText.textContent = "0%";
+    barFill.style.width = "0%";
+    rowsText.textContent = "0 / 0 rows";
+    pixelsScannedText.textContent = "0 pixels";
+    deviantPixelsValue.textContent = "—";
+    fidelityValue.textContent = "—";
+    isProcessing = false;
+    setButtonsDuringProcessing(false);
+    refreshCompareState();
+    return;
+  }
+
+  try {
+    statusText.textContent = "Preparing comparison…";
+    rowsText.textContent = `0 / ${heightA} rows`;
+    pixelsScannedText.textContent = `0 pixels`;
+
+    const imageDataA = getImageDataFromImage(imageStateA.img);
+    const imageDataB = getImageDataFromImage(imageStateB.img);
+
+    const dataA = imageDataA.data;
+    const dataB = imageDataB.data;
+
+    const diffImage = new ImageData(widthA, heightA);
+    const diffData = diffImage.data;
+
+    const totalPixels = widthA * heightA;
+    let differingPixels = 0;
+    let y = 0;
+
+    diffCanvas.width = widthA;
+    diffCanvas.height = heightA;
+    diffPlaceholder.style.display = "none";
+
+    while (y < heightA) {
+      const batchEnd = Math.min(y + ROW_BATCH, heightA);
+
+      for (; y < batchEnd; y++) {
+        for (let x = 0; x < widthA; x++) {
+          const i = (y * widthA + x) * 4;
+
+          const r1 = dataA[i];
+          const g1 = dataA[i + 1];
+          const b1 = dataA[i + 2];
+          const a1 = dataA[i + 3];
+
+          const r2 = dataB[i];
+          const g2 = dataB[i + 1];
+          const b2 = dataB[i + 2];
+          const a2 = dataB[i + 3];
+
+          const different = (r1 !== r2) || (g1 !== g2) || (b1 !== b2) || (a1 !== a2);
+
+          if (different) {
+            differingPixels++;
+            diffData[i]     = 255;
+            diffData[i + 1] = 0;
+            diffData[i + 2] = 0;
+            diffData[i + 3] = 255;
+          } else {
+            diffData[i]     = 50;
+            diffData[i + 1] = 215;
+            diffData[i + 2] = 75;
+            diffData[i + 3] = 255;
+          }
+        }
+      }
+
+      diffCtx.putImageData(diffImage, 0, 0);
+
+      const scannedPixels = Math.min(y * widthA, totalPixels);
+      const progress = (scannedPixels / totalPixels) * 100;
+
+      statusText.textContent = "Comparing pixels…";
+      percentText.textContent = `${progress.toFixed(1)}%`;
+      barFill.style.width = `${progress}%`;
+      rowsText.textContent = `${y} / ${heightA} rows`;
+      pixelsScannedText.textContent = `${formatNumber(scannedPixels)} pixels`;
+
+      await nextFrame();
+    }
+
+    rebuildDiffImageURL();
+
+    const fidelity = totalPixels === 0 ? 100 : ((totalPixels - differingPixels) / totalPixels) * 100;
+
+    statusText.textContent = differingPixels === 0 ? "Perfect match" : "Differences found";
+    percentText.textContent = "100%";
+    barFill.style.width = "100%";
+    rowsText.textContent = `${heightA} / ${heightA} rows`;
+    pixelsScannedText.textContent = `${formatNumber(totalPixels)} pixels`;
+
+    deviantPixelsValue.textContent = formatNumber(differingPixels);
+    fidelityValue.textContent = `${fidelity.toFixed(6)}%`;
+  } catch (error) {
+    console.error(error);
+    statusText.textContent = "Comparison failed";
+    deviantPixelsValue.textContent = "—";
+    fidelityValue.textContent = "—";
+  } finally {
+    isProcessing = false;
+    setButtonsDuringProcessing(false);
+    refreshCompareState();
+  }
+}
+
+function getImageDataFromImage(img) {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  ctx.drawImage(img, 0, 0);
+
+  return ctx.getImageData(0, 0, canvas.width, canvas.height);
+}
+
+function setImageUI(which, file, loaded) {
+  const btn = which === "A" ? pickBtnA : pickBtnB;
+  const sizeEl = which === "A" ? fileSizeA : fileSizeB;
+  const resEl = which === "A" ? fileResA : fileResB;
+
+  btn.classList.remove("empty");
+  btn.classList.add("filled");
+  btn.innerHTML = `
+    <span class="image-btn-inner">
+      <span class="image-thumb">
+        <img src="${loaded.url}" alt="">
+      </span>
+      <span class="image-btn-text">
+        <span class="image-btn-main">${escapeHtml(shortenFilename(file.name))}</span>
+        <span class="image-btn-sub">${which === "A" ? "Image A" : "Image B"}</span>
+      </span>
+    </span>
+  `;
+
+  sizeEl.textContent = formatBytes(file.size);
+  resEl.textContent = `${loaded.img.naturalWidth} × ${loaded.img.naturalHeight}`;
+  sizeEl.classList.remove("empty");
+  resEl.classList.remove("empty");
+}
+
+function clearImageUI(which) {
+  const btn = which === "A" ? pickBtnA : pickBtnB;
+  const sizeEl = which === "A" ? fileSizeA : fileSizeB;
+  const resEl = which === "A" ? fileResA : fileResB;
+
+  btn.classList.remove("filled");
+  btn.classList.add("empty");
+  btn.innerHTML = `
+    <span class="image-btn-inner">
+      <span class="image-btn-text">
+        <span class="image-btn-main">${which === "A" ? "Image A" : "Image B"}</span>
+      </span>
+    </span>
+  `;
+
+  sizeEl.textContent = "";
+  resEl.textContent = "";
+  sizeEl.classList.add("empty");
+  resEl.classList.add("empty");
+}
+
+function updateCompactLayoutState() {
+  if (imageStateA && imageStateB) {
+    app.classList.add("compact-images");
+  } else {
+    app.classList.remove("compact-images");
+  }
+}
+
+function refreshCompareState() {
+  compareBtn.disabled = !(imageStateA && imageStateB) || isProcessing;
+}
+
+function setButtonsDuringProcessing(active) {
+  pickBtnA.disabled = active;
+  pickBtnB.disabled = active;
+  compareBtn.disabled = active || !(imageStateA && imageStateB);
+  resetBtn.disabled = active;
+}
+
+function resetComparisonOutputs() {
+  statusText.textContent = (imageStateA && imageStateB) ? "Ready to compare" : "Waiting for images…";
+  percentText.textContent = "0%";
+  barFill.style.width = "0%";
+  rowsText.textContent = "0 / 0 rows";
+  pixelsScannedText.textContent = "0 pixels";
+  deviantPixelsValue.textContent = "0";
+  fidelityValue.textContent = "100%";
+  setIdleDiffCanvas();
+}
+
+function setIdleDiffCanvas() {
+  diffCanvas.width = 1;
+  diffCanvas.height = 1;
+  diffCtx.clearRect(0, 0, 1, 1);
+  diffPlaceholder.style.display = "flex";
+  clearDiffImageURL();
+}
+
+function rebuildDiffImageURL() {
+  clearDiffImageURL();
+  diffImageURL = diffCanvas.toDataURL("image/png");
+  viewerImage.src = diffImageURL;
+}
+
+function clearDiffImageURL() {
+  diffImageURL = "";
+  viewerImage.removeAttribute("src");
+}
+
+function resetAll() {
+  fileInputA.value = "";
+  fileInputB.value = "";
+
+  if (imageStateA?.url) URL.revokeObjectURL(imageStateA.url);
+  if (imageStateB?.url) URL.revokeObjectURL(imageStateB.url);
+
+  imageStateA = null;
+  imageStateB = null;
+  isProcessing = false;
+
+  clearImageUI("A");
+  clearImageUI("B");
+  updateCompactLayoutState();
+  resetComparisonOutputs();
+
+  compareBtn.disabled = true;
+  resetBtn.disabled = false;
+  closeViewer();
+}
+
+/* =========================================================
+   Fullscreen viewer
+   ========================================================= */
+
+function openViewer() {
+  if (!diffImageURL) return;
+
+  viewer.classList.add("open");
+  viewer.setAttribute("aria-hidden", "false");
+  viewerOpen = true;
+  fitViewerToScreen();
+}
+
+function closeViewer() {
+  viewer.classList.remove("open");
+  viewer.setAttribute("aria-hidden", "true");
+  viewerOpen = false;
+}
+
+function fitViewerToScreen() {
+  const stageRect = viewerStage.getBoundingClientRect();
+  const imgW = viewerImage.naturalWidth;
+  const imgH = viewerImage.naturalHeight;
+
+  if (!imgW || !imgH || !stageRect.width || !stageRect.height) return;
+
+  minScale = Math.min(stageRect.width / imgW, stageRect.height / imgH);
+  maxScale = Math.max(minScale * 20, 1);
+  currentScale = minScale;
+
+  translateX = (stageRect.width - imgW * currentScale) / 2;
+  translateY = (stageRect.height - imgH * currentScale) / 2;
+
+  applyViewerTransform();
+}
+
+function applyViewerTransform() {
+  viewerTransform.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+}
+
+function clampTranslation() {
+  const stageRect = viewerStage.getBoundingClientRect();
+  const imgW = viewerImage.naturalWidth * currentScale;
+  const imgH = viewerImage.naturalHeight * currentScale;
+
+  if (imgW <= stageRect.width) {
+    translateX = (stageRect.width - imgW) / 2;
+  } else {
+    const minX = stageRect.width - imgW;
+    const maxX = 0;
+    translateX = Math.min(maxX, Math.max(minX, translateX));
+  }
+
+  if (imgH <= stageRect.height) {
+    translateY = (stageRect.height - imgH) / 2;
+  } else {
+    const minY = stageRect.height - imgH;
+    const maxY = 0;
+    translateY = Math.min(maxY, Math.max(minY, translateY));
+  }
+}
+
+function zoomAtPoint(targetScale, clientX, clientY) {
+  const stageRect = viewerStage.getBoundingClientRect();
+  const newScale = Math.min(maxScale, Math.max(minScale, targetScale));
+  const scaleRatio = newScale / currentScale;
+
+  const x = clientX - stageRect.left;
+  const y = clientY - stageRect.top;
+
+  translateX = x - (x - translateX) * scaleRatio;
+  translateY = y - (y - translateY) * scaleRatio;
+  currentScale = newScale;
+
+  clampTranslation();
+  applyViewerTransform();
+}
+
+viewerImage.addEventListener("load", () => {
+  if (viewerOpen) fitViewerToScreen();
+});
+
+viewerStage.addEventListener("touchstart", (e) => {
+  if (!viewerOpen) return;
+
+  if (e.touches.length === 1) {
+    const now = Date.now();
+
+    if (now - lastTapTime < 300) {
+      const touch = e.touches[0];
+      if (currentScale <= minScale * 1.01) {
+        zoomAtPoint(minScale * 3, touch.clientX, touch.clientY);
+      } else {
+        fitViewerToScreen();
+      }
+      lastTapTime = 0;
+      e.preventDefault();
+      return;
+    }
+
+    lastTapTime = now;
+    isDragging = true;
+    dragStartX = e.touches[0].clientX;
+    dragStartY = e.touches[0].clientY;
+    startTranslateX = translateX;
+    startTranslateY = translateY;
+  } else if (e.touches.length === 2) {
+    isDragging = false;
+    const [t1, t2] = e.touches;
+    pinchStartDistance = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+    pinchStartScale = currentScale;
+    pinchCenterX = (t1.clientX + t2.clientX) / 2;
+    pinchCenterY = (t1.clientY + t2.clientY) / 2;
+  }
+}, { passive:false });
+
+viewerStage.addEventListener("touchmove", (e) => {
+  if (!viewerOpen) return;
+
+  if (e.touches.length === 1 && isDragging) {
+    const dx = e.touches[0].clientX - dragStartX;
+    const dy = e.touches[0].clientY - dragStartY;
+
+    translateX = startTranslateX + dx;
+    translateY = startTranslateY + dy;
+    clampTranslation();
+    applyViewerTransform();
+    e.preventDefault();
+  } else if (e.touches.length === 2) {
+    const [t1, t2] = e.touches;
+    const distance = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+    const targetScale = pinchStartScale * (distance / pinchStartDistance);
+    zoomAtPoint(targetScale, pinchCenterX, pinchCenterY);
+    e.preventDefault();
+  }
+}, { passive:false });
+
+viewerStage.addEventListener("touchend", () => {
+  isDragging = false;
+}, { passive:true });
+
+window.addEventListener("resize", () => {
+  if (viewerOpen) fitViewerToScreen();
+});
+
+function shortenFilename(name, front = 4, back = 6) {
+  const str = String(name || "");
+  if (str.length <= front + back + 3) return str;
+  return `${str.slice(0, front)}...${str.slice(-back)}`;
+}
+
+function formatBytes(bytes) {
+  if (!Number.isFinite(bytes) || bytes < 0) return "0 B";
+  if (bytes === 0) return "0 B";
+
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  const exp = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+  const value = bytes / Math.pow(1024, exp);
+
+  if (exp === 0) return `${value.toFixed(0)} ${units[exp]}`;
+  if (value >= 100) return `${value.toFixed(0)} ${units[exp]}`;
+  if (value >= 10) return `${value.toFixed(1)} ${units[exp]}`;
+  return `${value.toFixed(2)} ${units[exp]}`;
+}
+
+function formatNumber(num) {
+  return new Intl.NumberFormat("en-US").format(num);
+}
+
+function nextFrame() {
+  return new Promise(resolve => requestAnimationFrame(resolve));
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+resetAll();
+</script>
+</body>
+</html>
