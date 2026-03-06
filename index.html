@@ -49,6 +49,11 @@
     min-height:100dvh;
   }
 
+  html.is-webapp body{
+    height:var(--app-height);
+    min-height:var(--app-height);
+  }
+
   button,
   input,
   canvas,
@@ -80,6 +85,11 @@
       auto;
     gap:10px;
     overflow:hidden;
+  }
+
+  html.is-webapp .app{
+    height:var(--app-height);
+    min-height:var(--app-height);
   }
 
   .frame{
@@ -863,6 +873,32 @@
 <script>
 (() => {
   "use strict";
+
+  function isStandaloneWebApp() {
+    return (
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone === true
+    );
+  }
+
+  function applyIOSWebAppHeight() {
+    const webApp = isStandaloneWebApp();
+
+    document.documentElement.classList.toggle("is-webapp", webApp);
+    document.documentElement.classList.toggle("is-browser", !webApp);
+
+    if (webApp) {
+      document.documentElement.style.setProperty("--app-height", `${window.innerHeight}px`);
+    } else {
+      document.documentElement.style.removeProperty("--app-height");
+    }
+  }
+
+  window.addEventListener("resize", applyIOSWebAppHeight);
+  window.addEventListener("orientationchange", applyIOSWebAppHeight);
+  window.addEventListener("pageshow", applyIOSWebAppHeight);
+  document.addEventListener("DOMContentLoaded", applyIOSWebAppHeight);
+  applyIOSWebAppHeight();
 
   const app = document.getElementById("app");
 
