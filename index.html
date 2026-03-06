@@ -8,9 +8,7 @@
 />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-
 <link rel="apple-touch-icon" href="icon-IOS.png">
-
 <title>Pixel Compare</title>
 
 <style>
@@ -34,7 +32,7 @@
     -webkit-tap-highlight-color:transparent;
   }
 
-  html,body{
+  html, body{
     margin:0;
     padding:0;
     width:100%;
@@ -55,6 +53,10 @@
   canvas,
   img{
     font:inherit;
+  }
+
+  button,
+  input{
     touch-action:manipulation;
   }
 
@@ -72,7 +74,7 @@
     display:grid;
     grid-template-rows:
       minmax(0, 1.76fr)
-      minmax(84px, 0.58fr)
+      minmax(96px, 0.68fr)
       auto
       auto;
     gap:10px;
@@ -83,7 +85,7 @@
   .app.compact-images{
     grid-template-rows:
       minmax(0, 1.98fr)
-      minmax(84px, 0.56fr)
+      minmax(96px, 0.66fr)
       auto
       auto;
   }
@@ -92,7 +94,9 @@
     min-width:0;
     min-height:0;
     overflow:hidden;
-    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00)), var(--card);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00)),
+      var(--card);
     border:1px solid var(--line);
     border-radius:var(--radius-xl);
     box-shadow:var(--shadow);
@@ -112,9 +116,6 @@
     min-width:0;
     min-height:0;
     position:relative;
-    background:#0d0d0f;
-    border:1px solid var(--line);
-    border-radius:16px;
     overflow:hidden;
     display:flex;
     align-items:center;
@@ -122,10 +123,28 @@
     cursor:pointer;
   }
 
-  .diff-view canvas{
+  .diff-stage{
+    position:relative;
+    width:100%;
+    height:100%;
+    max-width:100%;
+    max-height:100%;
+    background:#0d0d0f;
+    border:1px solid var(--line);
+    border-radius:16px;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex:0 0 auto;
+  }
+
+  .diff-stage canvas{
     width:100%;
     height:100%;
     display:block;
+    image-rendering:pixelated;
+    image-rendering:crisp-edges;
   }
 
   .diff-placeholder{
@@ -230,10 +249,10 @@
     overflow:hidden;
     border-radius:16px;
     padding:10px 10px 9px;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    gap:6px;
+    display:grid;
+    grid-template-rows:auto 1fr;
+    align-items:stretch;
+    gap:8px;
     background:#0d0d0f;
     border:1px solid var(--line);
   }
@@ -256,15 +275,27 @@
     font-weight:800;
     letter-spacing:0.05em;
     text-transform:uppercase;
+    text-align:center;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
   }
 
-  .metric-value{
+  .metric-values{
+    min-width:0;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    text-align:center;
+  }
+
+  .metric-percent{
     margin:0;
     min-width:0;
-    font-size:clamp(18px, 5.3vw, 28px);
+    font-size:clamp(18px, 5.1vw, 27px);
     line-height:1;
     font-weight:800;
     letter-spacing:-0.03em;
@@ -274,8 +305,23 @@
     text-overflow:ellipsis;
   }
 
-  .metric.red .metric-value{ color:var(--red); }
-  .metric.green .metric-value{ color:var(--green); }
+  .metric-pixels{
+    margin:0;
+    min-width:0;
+    font-size:clamp(12px, 3.4vw, 16px);
+    line-height:1.1;
+    font-weight:700;
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .metric.red .metric-percent,
+  .metric.red .metric-pixels{ color:var(--red); }
+
+  .metric.green .metric-percent,
+  .metric.green .metric-pixels{ color:var(--green); }
 
   /* Frame 3 */
   .images-wrap{
@@ -296,27 +342,42 @@
 
   .image-btn{
     appearance:none;
+    position:relative;
+    isolation:isolate;
     border:none;
     width:100%;
     min-width:0;
-    border-radius:16px;
+    border-radius:18px;
     cursor:pointer;
     display:block;
     overflow:hidden;
     background:
-      linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.015)),
-      #111216;
-    border:1px solid var(--line-strong);
+      linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015)),
+      linear-gradient(180deg, rgba(77,163,255,0.08), rgba(77,163,255,0.00)),
+      #12141a;
+    border:1px solid rgba(255,255,255,0.16);
     box-shadow:
-      inset 0 1px 0 rgba(255,255,255,0.035),
-      inset 0 -1px 0 rgba(0,0,0,0.30);
+      inset 0 1px 0 rgba(255,255,255,0.06),
+      inset 0 -1px 0 rgba(0,0,0,0.32),
+      0 8px 20px rgba(0,0,0,0.22);
     padding:0;
     transition:
       background 0.18s ease,
       border-color 0.18s ease,
       transform 0.08s ease,
       filter 0.08s ease,
-      opacity 0.18s ease;
+      opacity 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+
+  .image-btn::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:inherit;
+    pointer-events:none;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,0.02);
+    z-index:0;
   }
 
   .image-btn:active,
@@ -334,18 +395,31 @@
 
   .image-btn.empty{
     background:
-      linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)),
-      #15161a;
+      linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02)),
+      linear-gradient(180deg, rgba(77,163,255,0.10), rgba(77,163,255,0.02)),
+      #141821;
+    border-color:rgba(255,255,255,0.18);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.07),
+      inset 0 -1px 0 rgba(0,0,0,0.32),
+      0 10px 24px rgba(0,0,0,0.24);
   }
 
   .image-btn.filled{
     background:
-      linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012)),
-      #101115;
-    border-color:rgba(255,255,255,0.13);
+      linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.02)),
+      linear-gradient(180deg, rgba(77,163,255,0.09), rgba(77,163,255,0.015)),
+      #11151d;
+    border-color:rgba(255,255,255,0.17);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.06),
+      inset 0 -1px 0 rgba(0,0,0,0.32),
+      0 10px 24px rgba(0,0,0,0.22);
   }
 
   .image-btn-inner{
+    position:relative;
+    z-index:1;
     width:100%;
     min-width:0;
     display:grid;
@@ -358,27 +432,30 @@
     min-height:68px;
     grid-template-columns:1fr;
     justify-items:start;
-    padding:12px 14px;
+    padding:12px 14px 12px 18px;
   }
 
   .app.compact-images .image-btn.filled .image-btn-inner{
     min-height:48px;
-    padding:6px 9px;
+    padding:6px 9px 6px 13px;
     gap:8px;
   }
 
   .app:not(.compact-images) .image-btn.filled .image-btn-inner{
     min-height:54px;
-    padding:8px 10px;
+    padding:8px 10px 8px 14px;
   }
 
   .image-thumb{
-    width:36px;
-    height:36px;
-    border-radius:10px;
+    width:38px;
+    height:38px;
+    border-radius:11px;
     overflow:hidden;
     background:#09090b;
-    border:1px solid var(--line);
+    border:1px solid rgba(255,255,255,0.10);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.05),
+      0 3px 10px rgba(0,0,0,0.28);
     flex:0 0 auto;
   }
 
@@ -400,7 +477,7 @@
     color:var(--text);
     font-size:13px;
     line-height:1.2;
-    font-weight:750;
+    font-weight:780;
     letter-spacing:-0.01em;
     white-space:nowrap;
     overflow:hidden;
@@ -408,7 +485,7 @@
   }
 
   .image-btn-sub{
-    color:var(--sub);
+    color:#a6b3c7;
     font-size:11px;
     line-height:1.15;
     white-space:nowrap;
@@ -418,7 +495,8 @@
 
   .image-btn.empty .image-btn-main{
     font-size:16px;
-    font-weight:760;
+    font-weight:800;
+    letter-spacing:-0.015em;
   }
 
   .image-meta{
@@ -497,7 +575,7 @@
     display:none;
   }
 
-  /* --- Fullscreen viewer replaced with sample-style modal --- */
+  /* Fullscreen modal */
   .fs-modal{
     position:fixed;
     inset:0;
@@ -549,7 +627,9 @@
   .fs-image{
     max-width:100%;
     max-height:100%;
-    object-fit:contain;
+    width:auto;
+    height:auto;
+    display:block;
     image-rendering:pixelated;
     image-rendering:crisp-edges;
     user-select:none;
@@ -574,8 +654,12 @@
       gap:8px;
     }
 
-    .metric-value{
+    .metric-percent{
       font-size:clamp(17px, 5vw, 24px);
+    }
+
+    .metric-pixels{
+      font-size:clamp(11px, 3.2vw, 14px);
     }
 
     .image-row{
@@ -585,18 +669,18 @@
 
     .image-btn.empty .image-btn-inner{
       min-height:62px;
-      padding:11px 12px;
+      padding:11px 12px 11px 16px;
     }
 
     .app.compact-images .image-btn.filled .image-btn-inner{
       min-height:46px;
-      padding:6px 8px;
+      padding:6px 8px 6px 12px;
       gap:7px;
     }
 
     .app:not(.compact-images) .image-btn.filled .image-btn-inner{
       min-height:50px;
-      padding:7px 9px;
+      padding:7px 9px 7px 13px;
       gap:8px;
     }
 
@@ -620,9 +704,11 @@
 
     <div class="frame">
       <div class="diff-frame-wrap">
-        <div id="diffView" class="diff-view" aria-label="Comparison preview" role="button">
-          <canvas id="diffCanvas"></canvas>
-          <div id="diffPlaceholder" class="diff-placeholder">Difference image will appear here</div>
+        <div id="diffView" class="diff-view" aria-label="Comparison preview" role="button" tabindex="0">
+          <div id="diffStage" class="diff-stage">
+            <canvas id="diffCanvas"></canvas>
+            <div id="diffPlaceholder" class="diff-placeholder">Difference image will appear here</div>
+          </div>
         </div>
 
         <div class="progress-wrap">
@@ -646,13 +732,19 @@
     <div class="frame">
       <div class="results-wrap">
         <div class="metric red">
-          <p class="metric-label">Deviant Pixels</p>
-          <p id="deviantPixelsValue" class="metric-value">0</p>
+          <p class="metric-label">Divergent Pixles</p>
+          <div class="metric-values">
+            <p id="divergentPercentValue" class="metric-percent">0.0000%</p>
+            <p id="divergentPixelsValue" class="metric-pixels">0 px</p>
+          </div>
         </div>
 
         <div class="metric green">
-          <p class="metric-label">Fidelity</p>
-          <p id="fidelityValue" class="metric-value">100%</p>
+          <p class="metric-label">Convergent Pixels</p>
+          <div class="metric-values">
+            <p id="convergentPercentValue" class="metric-percent">100.0000%</p>
+            <p id="convergentPixelsValue" class="metric-pixels">0 px</p>
+          </div>
         </div>
       </div>
     </div>
@@ -664,7 +756,7 @@
           <button id="pickBtnA" class="image-btn empty" type="button" aria-label="Choose Image A">
             <span class="image-btn-inner">
               <span class="image-btn-text">
-                <span class="image-btn-main">Image A</span>
+                <span class="image-btn-main">Choose Image A</span>
               </span>
             </span>
           </button>
@@ -686,7 +778,7 @@
           <button id="pickBtnB" class="image-btn empty" type="button" aria-label="Choose Image B">
             <span class="image-btn-inner">
               <span class="image-btn-text">
-                <span class="image-btn-main">Image B</span>
+                <span class="image-btn-main">Choose Image B</span>
               </span>
             </span>
           </button>
@@ -713,7 +805,6 @@
     </div>
   </div>
 
-  <!-- Replaced fullscreen viewer -->
   <div id="fsModal" class="fs-modal" aria-hidden="true">
     <button id="fsCloseBtn" class="fs-close-btn" type="button" aria-label="Close fullscreen viewer">
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -723,555 +814,651 @@
     </button>
 
     <div id="fsWrapper" class="fs-image-wrapper">
-      <img id="fsImage" class="fs-image" alt="Comparison image">
+      <canvas id="fsCanvas" class="fs-image" aria-label="Comparison image fullscreen"></canvas>
     </div>
   </div>
 
 <script>
-const app = document.getElementById("app");
+(() => {
+  "use strict";
 
-const pickBtnA = document.getElementById("pickBtnA");
-const pickBtnB = document.getElementById("pickBtnB");
-const fileInputA = document.getElementById("fileInputA");
-const fileInputB = document.getElementById("fileInputB");
+  const app = document.getElementById("app");
 
-const fileSizeA = document.getElementById("fileSizeA");
-const fileResA  = document.getElementById("fileResA");
+  const pickBtnA = document.getElementById("pickBtnA");
+  const pickBtnB = document.getElementById("pickBtnB");
+  const fileInputA = document.getElementById("fileInputA");
+  const fileInputB = document.getElementById("fileInputB");
 
-const fileSizeB = document.getElementById("fileSizeB");
-const fileResB  = document.getElementById("fileResB");
+  const fileSizeA = document.getElementById("fileSizeA");
+  const fileResA  = document.getElementById("fileResA");
 
-const statusText = document.getElementById("statusText");
-const percentText = document.getElementById("percentText");
-const barFill = document.getElementById("barFill");
-const rowsText = document.getElementById("rowsText");
-const pixelsScannedText = document.getElementById("pixelsScannedText");
+  const fileSizeB = document.getElementById("fileSizeB");
+  const fileResB  = document.getElementById("fileResB");
 
-const deviantPixelsValue = document.getElementById("deviantPixelsValue");
-const fidelityValue = document.getElementById("fidelityValue");
+  const statusText = document.getElementById("statusText");
+  const percentText = document.getElementById("percentText");
+  const barFill = document.getElementById("barFill");
+  const rowsText = document.getElementById("rowsText");
+  const pixelsScannedText = document.getElementById("pixelsScannedText");
 
-const compareBtn = document.getElementById("compareBtn");
-const resetBtn = document.getElementById("resetBtn");
+  const divergentPercentValue = document.getElementById("divergentPercentValue");
+  const divergentPixelsValue = document.getElementById("divergentPixelsValue");
+  const convergentPercentValue = document.getElementById("convergentPercentValue");
+  const convergentPixelsValue = document.getElementById("convergentPixelsValue");
 
-const diffView = document.getElementById("diffView");
-const diffCanvas = document.getElementById("diffCanvas");
-const diffPlaceholder = document.getElementById("diffPlaceholder");
-const diffCtx = diffCanvas.getContext("2d", { willReadFrequently: true, alpha: false });
+  const compareBtn = document.getElementById("compareBtn");
+  const resetBtn = document.getElementById("resetBtn");
 
-/* Fullscreen elements from sample-style viewer */
-const fsModal = document.getElementById("fsModal");
-const fsCloseBtn = document.getElementById("fsCloseBtn");
-const fsImage = document.getElementById("fsImage");
-const fsWrapper = document.getElementById("fsWrapper");
+  const diffView = document.getElementById("diffView");
+  const diffStage = document.getElementById("diffStage");
+  const diffCanvas = document.getElementById("diffCanvas");
+  const diffPlaceholder = document.getElementById("diffPlaceholder");
+  const diffCtx = diffCanvas.getContext("2d", { willReadFrequently: true, alpha: false });
 
-let imageStateA = null;
-let imageStateB = null;
-let isProcessing = false;
-let compareRunId = 0;
+  const fsModal = document.getElementById("fsModal");
+  const fsCloseBtn = document.getElementById("fsCloseBtn");
+  const fsWrapper = document.getElementById("fsWrapper");
+  const fsCanvas = document.getElementById("fsCanvas");
+  const fsCtx = fsCanvas.getContext("2d", { alpha: false });
 
-const ROW_BATCH = 24;
+  let imageStateA = null;
+  let imageStateB = null;
+  let isProcessing = false;
+  let compareRunId = 0;
 
-/* Fullscreen interaction state */
-let matrixTransform = { x: 0, y: 0, scale: 1 };
-let initialPinchDistance = 0;
-let initialScale = 1;
-let lastPanPosition = { x: 0, y: 0 };
+  const ROW_BATCH = 24;
 
-pickBtnA.addEventListener("click", () => {
-  if (!isProcessing) fileInputA.click();
-});
+  let matrixTransform = { x: 0, y: 0, scale: 1 };
+  let initialPinchDistance = 0;
+  let initialScale = 1;
+  let lastPanPosition = { x: 0, y: 0 };
 
-pickBtnB.addEventListener("click", () => {
-  if (!isProcessing) fileInputB.click();
-});
-
-fileInputA.addEventListener("change", async () => {
-  if (isProcessing) return;
-  const file = fileInputA.files?.[0] || null;
-  imageStateA = await handleImageSelection(file, "A");
-  updateCompactLayoutState();
-  refreshCompareState();
-  refreshIdleStatus();
-});
-
-fileInputB.addEventListener("change", async () => {
-  if (isProcessing) return;
-  const file = fileInputB.files?.[0] || null;
-  imageStateB = await handleImageSelection(file, "B");
-  updateCompactLayoutState();
-  refreshCompareState();
-  refreshIdleStatus();
-});
-
-compareBtn.addEventListener("click", async () => {
-  if (!isProcessing && imageStateA && imageStateB) {
-    await compareImages();
-  }
-});
-
-resetBtn.addEventListener("click", () => {
-  if (!isProcessing) resetAll();
-});
-
-diffView.addEventListener("click", () => {
-  if (diffCanvas.width <= 1 || diffCanvas.height <= 1) return;
-  openViewer();
-});
-
-fsCloseBtn.addEventListener("click", closeViewer);
-
-fsModal.addEventListener("click", (e) => {
-  if (e.target === fsModal) closeViewer();
-});
-
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && fsModal.classList.contains("active")) {
-    closeViewer();
-  }
-});
-
-async function handleImageSelection(file, which) {
-  resetComparisonOutputs();
-
-  if (!file) {
-    revokeImageStateURL(which === "A" ? imageStateA : imageStateB);
-    clearImageUI(which);
-    return null;
-  }
-
-  try {
-    revokeImageStateURL(which === "A" ? imageStateA : imageStateB);
-
-    const loaded = await loadImageFromFile(file);
-    setImageUI(which, file, loaded);
-
-    return {
-      file,
-      img: loaded.img,
-      url: loaded.url,
-      width: loaded.img.naturalWidth,
-      height: loaded.img.naturalHeight
-    };
-  } catch (error) {
-    console.error(error);
-    clearImageUI(which);
-    statusText.textContent = "Failed to load image";
-    return null;
-  }
-}
-
-function loadImageFromFile(file) {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-
-    img.onload = async () => {
-      try {
-        if (typeof img.decode === "function") {
-          await img.decode().catch(() => {});
-        }
-
-        if (!img.naturalWidth || !img.naturalHeight) {
-          URL.revokeObjectURL(url);
-          reject(new Error("Invalid image dimensions"));
-          return;
-        }
-
-        resolve({ img, url });
-      } catch (error) {
-        URL.revokeObjectURL(url);
-        reject(error);
-      }
-    };
-
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("Image load failed"));
-    };
-
-    img.src = url;
+  pickBtnA.addEventListener("click", () => {
+    if (!isProcessing) fileInputA.click();
   });
-}
 
-async function compareImages() {
-  if (!imageStateA || !imageStateB || isProcessing) return;
+  pickBtnB.addEventListener("click", () => {
+    if (!isProcessing) fileInputB.click();
+  });
 
-  const thisRunId = ++compareRunId;
-  isProcessing = true;
-  setButtonsDuringProcessing(true);
-  resetComparisonOutputs();
+  fileInputA.addEventListener("change", async () => {
+    if (isProcessing) return;
+    const file = fileInputA.files?.[0] || null;
+    imageStateA = await handleImageSelection(file, "A");
+    updateCompactLayoutState();
+    refreshCompareState();
+    refreshIdleStatus();
+  });
 
-  const widthA = imageStateA.width;
-  const heightA = imageStateA.height;
-  const widthB = imageStateB.width;
-  const heightB = imageStateB.height;
+  fileInputB.addEventListener("change", async () => {
+    if (isProcessing) return;
+    const file = fileInputB.files?.[0] || null;
+    imageStateB = await handleImageSelection(file, "B");
+    updateCompactLayoutState();
+    refreshCompareState();
+    refreshIdleStatus();
+  });
 
-  if (widthA !== widthB || heightA !== heightB) {
-    statusText.textContent = "Resolution mismatch";
+  compareBtn.addEventListener("click", async () => {
+    if (!isProcessing && imageStateA && imageStateB) {
+      await compareImages();
+    }
+  });
+
+  resetBtn.addEventListener("click", () => {
+    if (!isProcessing) resetAll();
+  });
+
+  diffView.addEventListener("click", () => {
+    if (diffCanvas.width <= 1 || diffCanvas.height <= 1) return;
+    openViewer();
+  });
+
+  diffView.addEventListener("keydown", (e) => {
+    if ((e.key === "Enter" || e.key === " ") && diffCanvas.width > 1 && diffCanvas.height > 1) {
+      e.preventDefault();
+      openViewer();
+    }
+  });
+
+  fsCloseBtn.addEventListener("click", closeViewer);
+
+  fsModal.addEventListener("click", (e) => {
+    if (e.target === fsModal) closeViewer();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && fsModal.classList.contains("active")) {
+      closeViewer();
+    }
+  });
+
+  if ("ResizeObserver" in window) {
+    const ro = new ResizeObserver(() => {
+      if (diffCanvas.width > 1 && diffCanvas.height > 1) {
+        updateDiffStageSize(diffCanvas.width, diffCanvas.height);
+      } else {
+        resetDiffStageSize();
+      }
+    });
+    ro.observe(diffView);
+  } else {
+    window.addEventListener("resize", () => {
+      if (diffCanvas.width > 1 && diffCanvas.height > 1) {
+        updateDiffStageSize(diffCanvas.width, diffCanvas.height);
+      } else {
+        resetDiffStageSize();
+      }
+    });
+  }
+
+  async function handleImageSelection(file, which) {
+    resetComparisonOutputs();
+
+    if (!file) {
+      revokeImageStateURL(which === "A" ? imageStateA : imageStateB);
+      clearImageUI(which);
+      return null;
+    }
+
+    try {
+      revokeImageStateURL(which === "A" ? imageStateA : imageStateB);
+
+      const loaded = await loadImageFromFile(file);
+      setImageUI(which, file, loaded);
+
+      return {
+        file,
+        img: loaded.img,
+        url: loaded.url,
+        width: loaded.img.naturalWidth,
+        height: loaded.img.naturalHeight
+      };
+    } catch (error) {
+      console.error(error);
+      clearImageUI(which);
+      statusText.textContent = "Failed to load image";
+      return null;
+    }
+  }
+
+  function loadImageFromFile(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+
+      img.onload = async () => {
+        try {
+          if (typeof img.decode === "function") {
+            await img.decode().catch(() => {});
+          }
+
+          if (!img.naturalWidth || !img.naturalHeight) {
+            URL.revokeObjectURL(url);
+            reject(new Error("Invalid image dimensions"));
+            return;
+          }
+
+          resolve({ img, url });
+        } catch (error) {
+          URL.revokeObjectURL(url);
+          reject(error);
+        }
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("Image load failed"));
+      };
+
+      img.src = url;
+    });
+  }
+
+  async function compareImages() {
+    if (!imageStateA || !imageStateB || isProcessing) return;
+
+    const thisRunId = ++compareRunId;
+    isProcessing = true;
+    setButtonsDuringProcessing(true);
+    resetComparisonOutputs();
+
+    const widthA = imageStateA.width;
+    const heightA = imageStateA.height;
+    const widthB = imageStateB.width;
+    const heightB = imageStateB.height;
+
+    if (widthA !== widthB || heightA !== heightB) {
+      statusText.textContent = "Resolution mismatch";
+      percentText.textContent = "0%";
+      barFill.style.width = "0%";
+      rowsText.textContent = "0 / 0 rows";
+      pixelsScannedText.textContent = "0 pixels";
+      divergentPercentValue.textContent = "—";
+      divergentPixelsValue.textContent = "—";
+      convergentPercentValue.textContent = "—";
+      convergentPixelsValue.textContent = "—";
+      setIdleDiffCanvas();
+      isProcessing = false;
+      setButtonsDuringProcessing(false);
+      refreshCompareState();
+      return;
+    }
+
+    try {
+      statusText.textContent = "Preparing comparison…";
+      rowsText.textContent = `0 / ${heightA} rows`;
+      pixelsScannedText.textContent = "0 pixels";
+
+      const imageDataA = getImageDataFromImage(imageStateA.img);
+      const imageDataB = getImageDataFromImage(imageStateB.img);
+
+      const dataA = imageDataA.data;
+      const dataB = imageDataB.data;
+
+      const diffImage = new ImageData(widthA, heightA);
+      const diffData = diffImage.data;
+
+      const totalPixels = widthA * heightA;
+      let differingPixels = 0;
+      let y = 0;
+
+      diffCanvas.width = widthA;
+      diffCanvas.height = heightA;
+      diffPlaceholder.style.display = "none";
+      updateDiffStageSize(widthA, heightA);
+
+      while (y < heightA) {
+        if (thisRunId !== compareRunId) return;
+
+        const batchEnd = Math.min(y + ROW_BATCH, heightA);
+
+        for (; y < batchEnd; y++) {
+          let rowIndex = y * widthA * 4;
+
+          for (let x = 0; x < widthA; x++, rowIndex += 4) {
+            const different =
+              dataA[rowIndex]     !== dataB[rowIndex] ||
+              dataA[rowIndex + 1] !== dataB[rowIndex + 1] ||
+              dataA[rowIndex + 2] !== dataB[rowIndex + 2] ||
+              dataA[rowIndex + 3] !== dataB[rowIndex + 3];
+
+            if (different) {
+              differingPixels++;
+              diffData[rowIndex]     = 255;
+              diffData[rowIndex + 1] = 0;
+              diffData[rowIndex + 2] = 0;
+              diffData[rowIndex + 3] = 255;
+            } else {
+              diffData[rowIndex]     = 50;
+              diffData[rowIndex + 1] = 215;
+              diffData[rowIndex + 2] = 75;
+              diffData[rowIndex + 3] = 255;
+            }
+          }
+        }
+
+        diffCtx.putImageData(diffImage, 0, 0);
+
+        const scannedPixels = Math.min(y * widthA, totalPixels);
+        const progress = totalPixels > 0 ? (scannedPixels / totalPixels) * 100 : 100;
+
+        statusText.textContent = "Comparing pixels…";
+        percentText.textContent = `${progress.toFixed(1)}%`;
+        barFill.style.width = `${progress}%`;
+        rowsText.textContent = `${y} / ${heightA} rows`;
+        pixelsScannedText.textContent = `${formatNumber(scannedPixels)} pixels`;
+
+        await nextFrame();
+      }
+
+      const convergentPixels = totalPixels - differingPixels;
+      const divergentPercent = totalPixels === 0 ? 0 : (differingPixels / totalPixels) * 100;
+      const convergentPercent = totalPixels === 0 ? 100 : (convergentPixels / totalPixels) * 100;
+
+      statusText.textContent = differingPixels === 0 ? "Perfect match" : "Differences found";
+      percentText.textContent = "100%";
+      barFill.style.width = "100%";
+      rowsText.textContent = `${heightA} / ${heightA} rows`;
+      pixelsScannedText.textContent = `${formatNumber(totalPixels)} pixels`;
+
+      divergentPercentValue.textContent = `${divergentPercent.toFixed(4)}%`;
+      divergentPixelsValue.textContent = `${formatNumber(differingPixels)} px`;
+
+      convergentPercentValue.textContent = `${convergentPercent.toFixed(4)}%`;
+      convergentPixelsValue.textContent = `${formatNumber(convergentPixels)} px`;
+
+      if (fsModal.classList.contains("active")) {
+        syncFullscreenCanvas();
+      }
+    } catch (error) {
+      console.error(error);
+      statusText.textContent = "Comparison failed";
+      divergentPercentValue.textContent = "—";
+      divergentPixelsValue.textContent = "—";
+      convergentPercentValue.textContent = "—";
+      convergentPixelsValue.textContent = "—";
+      setIdleDiffCanvas();
+    } finally {
+      isProcessing = false;
+      setButtonsDuringProcessing(false);
+      refreshCompareState();
+    }
+  }
+
+  function getImageDataFromImage(img) {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true, alpha: true });
+
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    ctx.drawImage(img, 0, 0);
+
+    return ctx.getImageData(0, 0, canvas.width, canvas.height);
+  }
+
+  function setImageUI(which, file, loaded) {
+    const btn = which === "A" ? pickBtnA : pickBtnB;
+    const sizeEl = which === "A" ? fileSizeA : fileSizeB;
+    const resEl = which === "A" ? fileResA : fileResB;
+
+    btn.classList.remove("empty");
+    btn.classList.add("filled");
+
+    const shortName = escapeHtml(shortenFilename(file.name));
+    const label = which === "A" ? "Image A" : "Image B";
+    const safeSrc = loaded.url.replace(/"/g, "&quot;");
+
+    btn.innerHTML = `
+      <span class="image-btn-inner">
+        <span class="image-thumb">
+          <img src="${safeSrc}" alt="">
+        </span>
+        <span class="image-btn-text">
+          <span class="image-btn-main">${shortName}</span>
+          <span class="image-btn-sub">${label}</span>
+        </span>
+      </span>
+    `;
+
+    sizeEl.textContent = formatBytes(file.size);
+    resEl.textContent = `${loaded.img.naturalWidth} × ${loaded.img.naturalHeight}`;
+    sizeEl.classList.remove("empty");
+    resEl.classList.remove("empty");
+  }
+
+  function clearImageUI(which) {
+    const btn = which === "A" ? pickBtnA : pickBtnB;
+    const sizeEl = which === "A" ? fileSizeA : fileSizeB;
+    const resEl = which === "A" ? fileResA : fileResB;
+
+    btn.classList.remove("filled");
+    btn.classList.add("empty");
+    btn.innerHTML = `
+      <span class="image-btn-inner">
+        <span class="image-btn-text">
+          <span class="image-btn-main">${which === "A" ? "Choose Image A" : "Choose Image B"}</span>
+        </span>
+      </span>
+    `;
+
+    sizeEl.textContent = "";
+    resEl.textContent = "";
+    sizeEl.classList.add("empty");
+    resEl.classList.add("empty");
+  }
+
+  function updateCompactLayoutState() {
+    if (imageStateA && imageStateB) {
+      app.classList.add("compact-images");
+    } else {
+      app.classList.remove("compact-images");
+    }
+  }
+
+  function refreshCompareState() {
+    compareBtn.disabled = !(imageStateA && imageStateB) || isProcessing;
+  }
+
+  function setButtonsDuringProcessing(active) {
+    pickBtnA.disabled = active;
+    pickBtnB.disabled = active;
+    compareBtn.disabled = active || !(imageStateA && imageStateB);
+    resetBtn.disabled = active;
+  }
+
+  function refreshIdleStatus() {
+    if (isProcessing) return;
+
+    if (imageStateA && imageStateB) {
+      statusText.textContent = "Ready to compare";
+    } else if (imageStateA || imageStateB) {
+      statusText.textContent = "Select the second image";
+    } else {
+      statusText.textContent = "Waiting for images…";
+    }
+  }
+
+  function resetComparisonOutputs() {
+    refreshIdleStatus();
     percentText.textContent = "0%";
     barFill.style.width = "0%";
     rowsText.textContent = "0 / 0 rows";
     pixelsScannedText.textContent = "0 pixels";
-    deviantPixelsValue.textContent = "—";
-    fidelityValue.textContent = "—";
-    isProcessing = false;
-    setButtonsDuringProcessing(false);
-    refreshCompareState();
-    return;
-  }
-
-  try {
-    statusText.textContent = "Preparing comparison…";
-    rowsText.textContent = `0 / ${heightA} rows`;
-    pixelsScannedText.textContent = "0 pixels";
-
-    const imageDataA = getImageDataFromImage(imageStateA.img);
-    const imageDataB = getImageDataFromImage(imageStateB.img);
-
-    const dataA = imageDataA.data;
-    const dataB = imageDataB.data;
-
-    const diffImage = new ImageData(widthA, heightA);
-    const diffData = diffImage.data;
-
-    const totalPixels = widthA * heightA;
-    let differingPixels = 0;
-    let y = 0;
-
-    diffCanvas.width = widthA;
-    diffCanvas.height = heightA;
-    diffPlaceholder.style.display = "none";
-
-    while (y < heightA) {
-      if (thisRunId !== compareRunId) return;
-
-      const batchEnd = Math.min(y + ROW_BATCH, heightA);
-
-      for (; y < batchEnd; y++) {
-        let rowIndex = y * widthA * 4;
-
-        for (let x = 0; x < widthA; x++, rowIndex += 4) {
-          const different =
-            dataA[rowIndex]     !== dataB[rowIndex] ||
-            dataA[rowIndex + 1] !== dataB[rowIndex + 1] ||
-            dataA[rowIndex + 2] !== dataB[rowIndex + 2] ||
-            dataA[rowIndex + 3] !== dataB[rowIndex + 3];
-
-          if (different) {
-            differingPixels++;
-            diffData[rowIndex]     = 255;
-            diffData[rowIndex + 1] = 0;
-            diffData[rowIndex + 2] = 0;
-            diffData[rowIndex + 3] = 255;
-          } else {
-            diffData[rowIndex]     = 50;
-            diffData[rowIndex + 1] = 215;
-            diffData[rowIndex + 2] = 75;
-            diffData[rowIndex + 3] = 255;
-          }
-        }
-      }
-
-      diffCtx.putImageData(diffImage, 0, 0);
-
-      const scannedPixels = Math.min(y * widthA, totalPixels);
-      const progress = totalPixels > 0 ? (scannedPixels / totalPixels) * 100 : 100;
-
-      statusText.textContent = "Comparing pixels…";
-      percentText.textContent = `${progress.toFixed(1)}%`;
-      barFill.style.width = `${progress}%`;
-      rowsText.textContent = `${y} / ${heightA} rows`;
-      pixelsScannedText.textContent = `${formatNumber(scannedPixels)} pixels`;
-
-      await nextFrame();
-    }
-
-    const fidelity = totalPixels === 0 ? 100 : ((totalPixels - differingPixels) / totalPixels) * 100;
-
-    statusText.textContent = differingPixels === 0 ? "Perfect match" : "Differences found";
-    percentText.textContent = "100%";
-    barFill.style.width = "100%";
-    rowsText.textContent = `${heightA} / ${heightA} rows`;
-    pixelsScannedText.textContent = `${formatNumber(totalPixels)} pixels`;
-
-    deviantPixelsValue.textContent = formatNumber(differingPixels);
-    fidelityValue.textContent = `${fidelity.toFixed(6)}%`;
-  } catch (error) {
-    console.error(error);
-    statusText.textContent = "Comparison failed";
-    deviantPixelsValue.textContent = "—";
-    fidelityValue.textContent = "—";
+    divergentPercentValue.textContent = "0.0000%";
+    divergentPixelsValue.textContent = "0 px";
+    convergentPercentValue.textContent = "100.0000%";
+    convergentPixelsValue.textContent = "0 px";
     setIdleDiffCanvas();
-  } finally {
+  }
+
+  function setIdleDiffCanvas() {
+    diffCanvas.width = 1;
+    diffCanvas.height = 1;
+    diffCtx.clearRect(0, 0, 1, 1);
+    diffPlaceholder.style.display = "flex";
+    resetDiffStageSize();
+    clearFullscreenImage();
+  }
+
+  function resetAll() {
+    compareRunId++;
+
+    fileInputA.value = "";
+    fileInputB.value = "";
+
+    revokeImageStateURL(imageStateA);
+    revokeImageStateURL(imageStateB);
+
+    imageStateA = null;
+    imageStateB = null;
     isProcessing = false;
-    setButtonsDuringProcessing(false);
-    refreshCompareState();
-  }
-}
 
-function getImageDataFromImage(img) {
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d", { willReadFrequently: true, alpha: true });
+    clearImageUI("A");
+    clearImageUI("B");
+    updateCompactLayoutState();
+    resetComparisonOutputs();
 
-  canvas.width = img.naturalWidth;
-  canvas.height = img.naturalHeight;
-  ctx.drawImage(img, 0, 0);
-
-  return ctx.getImageData(0, 0, canvas.width, canvas.height);
-}
-
-function setImageUI(which, file, loaded) {
-  const btn = which === "A" ? pickBtnA : pickBtnB;
-  const sizeEl = which === "A" ? fileSizeA : fileSizeB;
-  const resEl = which === "A" ? fileResA : fileResB;
-
-  btn.classList.remove("empty");
-  btn.classList.add("filled");
-
-  const shortName = escapeHtml(shortenFilename(file.name));
-  const label = which === "A" ? "Image A" : "Image B";
-  const safeSrc = loaded.url.replace(/"/g, "&quot;");
-
-  btn.innerHTML = `
-    <span class="image-btn-inner">
-      <span class="image-thumb">
-        <img src="${safeSrc}" alt="">
-      </span>
-      <span class="image-btn-text">
-        <span class="image-btn-main">${shortName}</span>
-        <span class="image-btn-sub">${label}</span>
-      </span>
-    </span>
-  `;
-
-  sizeEl.textContent = formatBytes(file.size);
-  resEl.textContent = `${loaded.img.naturalWidth} × ${loaded.img.naturalHeight}`;
-  sizeEl.classList.remove("empty");
-  resEl.classList.remove("empty");
-}
-
-function clearImageUI(which) {
-  const btn = which === "A" ? pickBtnA : pickBtnB;
-  const sizeEl = which === "A" ? fileSizeA : fileSizeB;
-  const resEl = which === "A" ? fileResA : fileResB;
-
-  btn.classList.remove("filled");
-  btn.classList.add("empty");
-  btn.innerHTML = `
-    <span class="image-btn-inner">
-      <span class="image-btn-text">
-        <span class="image-btn-main">${which === "A" ? "Image A" : "Image B"}</span>
-      </span>
-    </span>
-  `;
-
-  sizeEl.textContent = "";
-  resEl.textContent = "";
-  sizeEl.classList.add("empty");
-  resEl.classList.add("empty");
-}
-
-function updateCompactLayoutState() {
-  if (imageStateA && imageStateB) {
-    app.classList.add("compact-images");
-  } else {
-    app.classList.remove("compact-images");
-  }
-}
-
-function refreshCompareState() {
-  compareBtn.disabled = !(imageStateA && imageStateB) || isProcessing;
-}
-
-function setButtonsDuringProcessing(active) {
-  pickBtnA.disabled = active;
-  pickBtnB.disabled = active;
-  compareBtn.disabled = active || !(imageStateA && imageStateB);
-  resetBtn.disabled = active;
-}
-
-function refreshIdleStatus() {
-  if (isProcessing) return;
-
-  if (imageStateA && imageStateB) {
-    statusText.textContent = "Ready to compare";
-  } else if (imageStateA || imageStateB) {
-    statusText.textContent = "Select the second image";
-  } else {
-    statusText.textContent = "Waiting for images…";
-  }
-}
-
-function resetComparisonOutputs() {
-  refreshIdleStatus();
-  percentText.textContent = "0%";
-  barFill.style.width = "0%";
-  rowsText.textContent = "0 / 0 rows";
-  pixelsScannedText.textContent = "0 pixels";
-  deviantPixelsValue.textContent = "0";
-  fidelityValue.textContent = "100%";
-  setIdleDiffCanvas();
-}
-
-function setIdleDiffCanvas() {
-  diffCanvas.width = 1;
-  diffCanvas.height = 1;
-  diffCtx.clearRect(0, 0, 1, 1);
-  diffPlaceholder.style.display = "flex";
-  clearFullscreenImage();
-}
-
-function resetAll() {
-  compareRunId++;
-
-  fileInputA.value = "";
-  fileInputB.value = "";
-
-  revokeImageStateURL(imageStateA);
-  revokeImageStateURL(imageStateB);
-
-  imageStateA = null;
-  imageStateB = null;
-  isProcessing = false;
-
-  clearImageUI("A");
-  clearImageUI("B");
-  updateCompactLayoutState();
-  resetComparisonOutputs();
-
-  compareBtn.disabled = true;
-  resetBtn.disabled = false;
-  closeViewer();
-}
-
-function revokeImageStateURL(state) {
-  if (state?.url) {
-    URL.revokeObjectURL(state.url);
-  }
-}
-
-/* --- Sample-style fullscreen viewer logic --- */
-
-function openViewer() {
-  if (diffCanvas.width <= 1 || diffCanvas.height <= 1) return;
-
-  fsImage.src = diffCanvas.toDataURL("image/png");
-  fsModal.classList.add("active");
-  fsModal.setAttribute("aria-hidden", "false");
-
-  matrixTransform = { x: 0, y: 0, scale: 1 };
-  applyTransform();
-}
-
-function closeViewer() {
-  fsModal.classList.remove("active");
-  fsModal.setAttribute("aria-hidden", "true");
-}
-
-function clearFullscreenImage() {
-  fsImage.removeAttribute("src");
-  matrixTransform = { x: 0, y: 0, scale: 1 };
-  applyTransform();
-}
-
-function applyTransform() {
-  matrixTransform.scale = Math.max(1, Math.min(15, matrixTransform.scale));
-
-  if (matrixTransform.scale === 1) {
-    matrixTransform.x = 0;
-    matrixTransform.y = 0;
+    compareBtn.disabled = true;
+    resetBtn.disabled = false;
+    closeViewer();
   }
 
-  fsWrapper.style.transform =
-    `translate(${matrixTransform.x}px, ${matrixTransform.y}px) scale(${matrixTransform.scale})`;
-}
-
-fsModal.addEventListener("touchstart", (e) => {
-  if (!fsModal.classList.contains("active")) return;
-
-  if (e.touches.length === 2) {
-    initialPinchDistance = Math.hypot(
-      e.touches[0].pageX - e.touches[1].pageX,
-      e.touches[0].pageY - e.touches[1].pageY
-    );
-    initialScale = matrixTransform.scale;
-  } else if (e.touches.length === 1) {
-    lastPanPosition = {
-      x: e.touches[0].pageX,
-      y: e.touches[0].pageY
-    };
-  }
-}, { passive: true });
-
-fsModal.addEventListener("touchmove", (e) => {
-  if (!fsModal.classList.contains("active")) return;
-
-  e.preventDefault();
-
-  if (e.touches.length === 2) {
-    const currentDistance = Math.hypot(
-      e.touches[0].pageX - e.touches[1].pageX,
-      e.touches[0].pageY - e.touches[1].pageY
-    );
-
-    if (initialPinchDistance > 0) {
-      matrixTransform.scale = initialScale * (currentDistance / initialPinchDistance);
-      applyTransform();
+  function revokeImageStateURL(state) {
+    if (state?.url) {
+      URL.revokeObjectURL(state.url);
     }
-  } else if (e.touches.length === 1 && matrixTransform.scale > 1) {
-    const dx = e.touches[0].pageX - lastPanPosition.x;
-    const dy = e.touches[0].pageY - lastPanPosition.y;
+  }
 
-    matrixTransform.x += dx / matrixTransform.scale;
-    matrixTransform.y += dy / matrixTransform.scale;
+  function updateDiffStageSize(sourceWidth, sourceHeight) {
+    const maxWidth = diffView.clientWidth;
+    const maxHeight = diffView.clientHeight;
 
-    lastPanPosition = {
-      x: e.touches[0].pageX,
-      y: e.touches[0].pageY
-    };
+    if (!maxWidth || !maxHeight || !sourceWidth || !sourceHeight) {
+      resetDiffStageSize();
+      return;
+    }
 
+    const aspect = sourceWidth / sourceHeight;
+
+    let fittedWidth = maxWidth;
+    let fittedHeight = fittedWidth / aspect;
+
+    if (fittedHeight > maxHeight) {
+      fittedHeight = maxHeight;
+      fittedWidth = fittedHeight * aspect;
+    }
+
+    diffStage.style.width = `${Math.max(1, Math.round(fittedWidth))}px`;
+    diffStage.style.height = `${Math.max(1, Math.round(fittedHeight))}px`;
+  }
+
+  function resetDiffStageSize() {
+    diffStage.style.width = "100%";
+    diffStage.style.height = "100%";
+  }
+
+  /* Fullscreen viewer */
+
+  function syncFullscreenCanvas() {
+    if (diffCanvas.width <= 1 || diffCanvas.height <= 1) return;
+
+    fsCanvas.width = diffCanvas.width;
+    fsCanvas.height = diffCanvas.height;
+
+    fsCtx.clearRect(0, 0, fsCanvas.width, fsCanvas.height);
+    fsCtx.drawImage(diffCanvas, 0, 0);
+  }
+
+  function openViewer() {
+    if (diffCanvas.width <= 1 || diffCanvas.height <= 1) return;
+
+    syncFullscreenCanvas();
+    fsModal.classList.add("active");
+    fsModal.setAttribute("aria-hidden", "false");
+
+    matrixTransform = { x: 0, y: 0, scale: 1 };
     applyTransform();
   }
-}, { passive: false });
 
-function shortenFilename(name, front = 7, back = 8) {
-  const str = String(name || "");
-  if (str.length <= front + back + 3) return str;
-  return `${str.slice(0, front)}...${str.slice(-back)}`;
-}
+  function closeViewer() {
+    fsModal.classList.remove("active");
+    fsModal.setAttribute("aria-hidden", "true");
+    initialPinchDistance = 0;
+    initialScale = 1;
+    lastPanPosition = { x: 0, y: 0 };
+    matrixTransform = { x: 0, y: 0, scale: 1 };
+    applyTransform();
+  }
 
-function formatBytes(bytes) {
-  if (!Number.isFinite(bytes) || bytes < 0) return "0 B";
-  if (bytes === 0) return "0 B";
+  function clearFullscreenImage() {
+    fsCanvas.width = 1;
+    fsCanvas.height = 1;
+    fsCtx.clearRect(0, 0, 1, 1);
 
-  const units = ["B", "KB", "MB", "GB", "TB"];
-  const exp = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
-  const value = bytes / Math.pow(1024, exp);
+    matrixTransform = { x: 0, y: 0, scale: 1 };
+    applyTransform();
+  }
 
-  if (exp === 0) return `${value.toFixed(0)} ${units[exp]}`;
-  if (value >= 100) return `${value.toFixed(0)} ${units[exp]}`;
-  if (value >= 10) return `${value.toFixed(1)} ${units[exp]}`;
-  return `${value.toFixed(2)} ${units[exp]}`;
-}
+  function applyTransform() {
+    matrixTransform.scale = Math.max(1, Math.min(15, matrixTransform.scale));
 
-function formatNumber(num) {
-  return new Intl.NumberFormat("en-US").format(num);
-}
+    if (matrixTransform.scale === 1) {
+      matrixTransform.x = 0;
+      matrixTransform.y = 0;
+    }
 
-function nextFrame() {
-  return new Promise(resolve => requestAnimationFrame(resolve));
-}
+    fsWrapper.style.transform =
+      `translate(${matrixTransform.x}px, ${matrixTransform.y}px) scale(${matrixTransform.scale})`;
+  }
 
-function escapeHtml(str) {
-  return String(str)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
+  fsModal.addEventListener("touchstart", (e) => {
+    if (!fsModal.classList.contains("active")) return;
 
-resetAll();
+    if (e.touches.length === 2) {
+      initialPinchDistance = Math.hypot(
+        e.touches[0].pageX - e.touches[1].pageX,
+        e.touches[0].pageY - e.touches[1].pageY
+      );
+      initialScale = matrixTransform.scale;
+    } else if (e.touches.length === 1) {
+      lastPanPosition = {
+        x: e.touches[0].pageX,
+        y: e.touches[0].pageY
+      };
+    }
+  }, { passive: true });
+
+  fsModal.addEventListener("touchmove", (e) => {
+    if (!fsModal.classList.contains("active")) return;
+
+    e.preventDefault();
+
+    if (e.touches.length === 2) {
+      const currentDistance = Math.hypot(
+        e.touches[0].pageX - e.touches[1].pageX,
+        e.touches[0].pageY - e.touches[1].pageY
+      );
+
+      if (initialPinchDistance > 0) {
+        matrixTransform.scale = initialScale * (currentDistance / initialPinchDistance);
+        applyTransform();
+      }
+    } else if (e.touches.length === 1 && matrixTransform.scale > 1) {
+      const dx = e.touches[0].pageX - lastPanPosition.x;
+      const dy = e.touches[0].pageY - lastPanPosition.y;
+
+      matrixTransform.x += dx / matrixTransform.scale;
+      matrixTransform.y += dy / matrixTransform.scale;
+
+      lastPanPosition = {
+        x: e.touches[0].pageX,
+        y: e.touches[0].pageY
+      };
+
+      applyTransform();
+    }
+  }, { passive: false });
+
+  function shortenFilename(name, front = 7, back = 8) {
+    const str = String(name || "");
+    if (str.length <= front + back + 3) return str;
+    return `${str.slice(0, front)}...${str.slice(-back)}`;
+  }
+
+  function formatBytes(bytes) {
+    if (!Number.isFinite(bytes) || bytes < 0) return "0 B";
+    if (bytes === 0) return "0 B";
+
+    const units = ["B", "KB", "MB", "GB", "TB"];
+    const exp = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+    const value = bytes / Math.pow(1024, exp);
+
+    if (exp === 0) return `${value.toFixed(0)} ${units[exp]}`;
+    if (value >= 100) return `${value.toFixed(0)} ${units[exp]}`;
+    if (value >= 10) return `${value.toFixed(1)} ${units[exp]}`;
+    return `${value.toFixed(2)} ${units[exp]}`;
+  }
+
+  function formatNumber(num) {
+    return new Intl.NumberFormat("en-US").format(num);
+  }
+
+  function nextFrame() {
+    return new Promise(resolve => requestAnimationFrame(resolve));
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  resetAll();
+})();
 </script>
 </body>
 </html>
