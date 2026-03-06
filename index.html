@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <link rel="apple-touch-icon" href="icon-IOS.png">
+
 <title>Pixel Compare</title>
 
 <style>
@@ -73,21 +74,12 @@
       12px;
     display:grid;
     grid-template-rows:
-      minmax(0, 1.76fr)
-      minmax(96px, 0.68fr)
+      minmax(0, 1fr)
+      auto
       auto
       auto;
     gap:10px;
     overflow:hidden;
-    transition:grid-template-rows 0.2s ease;
-  }
-
-  .app.compact-images{
-    grid-template-rows:
-      minmax(0, 1.98fr)
-      minmax(96px, 0.66fr)
-      auto
-      auto;
   }
 
   .frame{
@@ -118,7 +110,7 @@
     position:relative;
     overflow:hidden;
     display:flex;
-    align-items:center;
+    align-items:flex-start;
     justify-content:center;
     cursor:pointer;
   }
@@ -183,6 +175,15 @@
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
+    transition:color 0.18s ease;
+  }
+
+  .status.status-success{
+    color:var(--green);
+  }
+
+  .status.status-error{
+    color:var(--red);
   }
 
   .percent{
@@ -241,6 +242,7 @@
     display:grid;
     grid-template-columns:1fr 1fr;
     gap:10px;
+    align-content:end;
   }
 
   .metric{
@@ -329,7 +331,7 @@
     display:grid;
     grid-template-rows:auto auto;
     gap:10px;
-    align-content:start;
+    align-content:end;
   }
 
   .image-row{
@@ -430,9 +432,7 @@
 
   .image-btn.empty .image-btn-inner{
     min-height:68px;
-    grid-template-columns:1fr;
-    justify-items:start;
-    padding:12px 14px 12px 18px;
+    padding:12px 14px 12px 14px;
   }
 
   .app.compact-images .image-btn.filled .image-btn-inner{
@@ -446,17 +446,21 @@
     padding:8px 10px 8px 14px;
   }
 
-  .image-thumb{
+  .image-thumb,
+  .image-empty-icon{
     width:38px;
     height:38px;
     border-radius:11px;
     overflow:hidden;
+    flex:0 0 auto;
+  }
+
+  .image-thumb{
     background:#09090b;
     border:1px solid rgba(255,255,255,0.10);
     box-shadow:
       inset 0 1px 0 rgba(255,255,255,0.05),
       0 3px 10px rgba(0,0,0,0.28);
-    flex:0 0 auto;
   }
 
   .image-thumb img{
@@ -464,6 +468,21 @@
     height:100%;
     display:block;
     object-fit:cover;
+  }
+
+  .image-empty-icon{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--text);
+  }
+
+  .image-empty-icon svg{
+    width:24px;
+    height:24px;
+    display:block;
+    fill:currentColor;
+    opacity:0.96;
   }
 
   .image-btn-text{
@@ -545,12 +564,14 @@
     display:grid;
     grid-template-columns:1fr 1fr;
     gap:10px;
+    align-self:end;
   }
 
   .action-btn{
     appearance:none;
     border:none;
-    min-height:46px;
+    height:48px;
+    min-height:48px;
     border-radius:15px;
     font-size:15px;
     font-weight:800;
@@ -669,7 +690,7 @@
 
     .image-btn.empty .image-btn-inner{
       min-height:62px;
-      padding:11px 12px 11px 16px;
+      padding:11px 12px 11px 12px;
     }
 
     .app.compact-images .image-btn.filled .image-btn-inner{
@@ -684,9 +705,15 @@
       gap:8px;
     }
 
-    .image-thumb{
+    .image-thumb,
+    .image-empty-icon{
       width:34px;
       height:34px;
+    }
+
+    .image-empty-icon svg{
+      width:22px;
+      height:22px;
     }
 
     .image-btn.empty .image-btn-main{
@@ -695,6 +722,11 @@
 
     .image-btn-main{
       font-size:12px;
+    }
+
+    .action-btn{
+      height:46px;
+      min-height:46px;
     }
   }
 </style>
@@ -734,16 +766,16 @@
         <div class="metric red">
           <p class="metric-label">Divergent Pixles</p>
           <div class="metric-values">
-            <p id="divergentPercentValue" class="metric-percent">0.0000%</p>
-            <p id="divergentPixelsValue" class="metric-pixels">0 px</p>
+            <p id="divergentPercentValue" class="metric-percent">%</p>
+            <p id="divergentPixelsValue" class="metric-pixels">px</p>
           </div>
         </div>
 
         <div class="metric green">
           <p class="metric-label">Convergent Pixels</p>
           <div class="metric-values">
-            <p id="convergentPercentValue" class="metric-percent">100.0000%</p>
-            <p id="convergentPixelsValue" class="metric-pixels">0 px</p>
+            <p id="convergentPercentValue" class="metric-percent">%</p>
+            <p id="convergentPixelsValue" class="metric-pixels">px</p>
           </div>
         </div>
       </div>
@@ -755,6 +787,11 @@
         <div class="image-row">
           <button id="pickBtnA" class="image-btn empty" type="button" aria-label="Choose Image A">
             <span class="image-btn-inner">
+              <span class="image-empty-icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="1 1 21.96 22.05" preserveAspectRatio="xMidYMid meet">
+                  <path d="M5.31,22l13.33,0.05c2.2,0,3.32-1.11,3.32-3.28V5.33c0-2.17-1.11-3.28-3.32-3.28L5.31,2C3.11,2,2,3.11,2,5.28v13.44 C2,20.9,3.11,22,5.31,22z M5.34,20.49c-1.19,0-1.84-0.63-1.84-1.85V5.36c0-1.22,0.65-1.85,1.84-1.85l13.27,0.05 c1.17,0,1.83,0.64,1.83,1.85v13.28c0,1.23-0.66,1.85-1.83,1.85L5.34,20.49z M8.71,10.38c1.21,0,2.2-0.99,2.2-2.2 c0-1.21-0.99-2.21-2.2-2.21c-1.22,0-2.2,1-2.2,2.21C6.51,9.4,7.49,10.38,8.71,10.38z M4.43,21.06h14.83c1.52,0,2.24-1.08,2.24-2.98 l-5.23-6.17c-0.4-0.47-0.84-0.7-1.33-0.7c-0.49,0-0.91,0.22-1.32,0.68l-3.94,4.45l-1.62-1.87c-0.37-0.42-0.75-0.64-1.18-0.64 c-0.4,0-0.77,0.2-1.11,0.62L2.5,18.25C2.59,20.16,3.16,21.06,4.43,21.06z"/>
+                </svg>
+              </span>
               <span class="image-btn-text">
                 <span class="image-btn-main">Choose Image A</span>
               </span>
@@ -777,6 +814,11 @@
         <div class="image-row">
           <button id="pickBtnB" class="image-btn empty" type="button" aria-label="Choose Image B">
             <span class="image-btn-inner">
+              <span class="image-empty-icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="1 1 21.96 22.05" preserveAspectRatio="xMidYMid meet">
+                  <path d="M5.31,22l13.33,0.05c2.2,0,3.32-1.11,3.32-3.28V5.33c0-2.17-1.11-3.28-3.32-3.28L5.31,2C3.11,2,2,3.11,2,5.28v13.44 C2,20.9,3.11,22,5.31,22z M5.34,20.49c-1.19,0-1.84-0.63-1.84-1.85V5.36c0-1.22,0.65-1.85,1.84-1.85l13.27,0.05 c1.17,0,1.83,0.64,1.83,1.85v13.28c0,1.23-0.66,1.85-1.83,1.85L5.34,20.49z M8.71,10.38c1.21,0,2.2-0.99,2.2-2.2 c0-1.21-0.99-2.21-2.2-2.21c-1.22,0-2.2,1-2.2,2.21C6.51,9.4,7.49,10.38,8.71,10.38z M4.43,21.06h14.83c1.52,0,2.24-1.08,2.24-2.98 l-5.23-6.17c-0.4-0.47-0.84-0.7-1.33-0.7c-0.49,0-0.91,0.22-1.32,0.68l-3.94,4.45l-1.62-1.87c-0.37-0.42-0.75-0.64-1.18-0.64 c-0.4,0-0.77,0.2-1.11,0.62L2.5,18.25C2.59,20.16,3.16,21.06,4.43,21.06z"/>
+                </svg>
+              </span>
               <span class="image-btn-text">
                 <span class="image-btn-main">Choose Image B</span>
               </span>
@@ -977,7 +1019,7 @@
     } catch (error) {
       console.error(error);
       clearImageUI(which);
-      statusText.textContent = "Failed to load image";
+      setStatus("Failed to load image");
       return null;
     }
   }
@@ -1029,15 +1071,12 @@
     const heightB = imageStateB.height;
 
     if (widthA !== widthB || heightA !== heightB) {
-      statusText.textContent = "Resolution mismatch";
+      setStatus("Resolution mismatch");
       percentText.textContent = "0%";
       barFill.style.width = "0%";
       rowsText.textContent = "0 / 0 rows";
       pixelsScannedText.textContent = "0 pixels";
-      divergentPercentValue.textContent = "—";
-      divergentPixelsValue.textContent = "—";
-      convergentPercentValue.textContent = "—";
-      convergentPixelsValue.textContent = "—";
+      setNoResultsDisplay();
       setIdleDiffCanvas();
       isProcessing = false;
       setButtonsDuringProcessing(false);
@@ -1046,7 +1085,7 @@
     }
 
     try {
-      statusText.textContent = "Preparing comparison…";
+      setStatus("Preparing comparison…");
       rowsText.textContent = `0 / ${heightA} rows`;
       pixelsScannedText.textContent = "0 pixels";
 
@@ -1103,7 +1142,7 @@
         const scannedPixels = Math.min(y * widthA, totalPixels);
         const progress = totalPixels > 0 ? (scannedPixels / totalPixels) * 100 : 100;
 
-        statusText.textContent = "Comparing pixels…";
+        setStatus("Comparing pixels…");
         percentText.textContent = `${progress.toFixed(1)}%`;
         barFill.style.width = `${progress}%`;
         rowsText.textContent = `${y} / ${heightA} rows`;
@@ -1116,7 +1155,12 @@
       const divergentPercent = totalPixels === 0 ? 0 : (differingPixels / totalPixels) * 100;
       const convergentPercent = totalPixels === 0 ? 100 : (convergentPixels / totalPixels) * 100;
 
-      statusText.textContent = differingPixels === 0 ? "Perfect match" : "Differences found";
+      if (differingPixels === 0) {
+        setStatus("Perfect Match", "success");
+      } else {
+        setStatus("Differenses found", "error");
+      }
+
       percentText.textContent = "100%";
       barFill.style.width = "100%";
       rowsText.textContent = `${heightA} / ${heightA} rows`;
@@ -1133,11 +1177,8 @@
       }
     } catch (error) {
       console.error(error);
-      statusText.textContent = "Comparison failed";
-      divergentPercentValue.textContent = "—";
-      divergentPixelsValue.textContent = "—";
-      convergentPercentValue.textContent = "—";
-      convergentPixelsValue.textContent = "—";
+      setStatus("Comparison failed");
+      setNoResultsDisplay();
       setIdleDiffCanvas();
     } finally {
       isProcessing = false;
@@ -1196,6 +1237,11 @@
     btn.classList.add("empty");
     btn.innerHTML = `
       <span class="image-btn-inner">
+        <span class="image-empty-icon" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="1 1 21.96 22.05" preserveAspectRatio="xMidYMid meet">
+            <path d="M5.31,22l13.33,0.05c2.2,0,3.32-1.11,3.32-3.28V5.33c0-2.17-1.11-3.28-3.32-3.28L5.31,2C3.11,2,2,3.11,2,5.28v13.44 C2,20.9,3.11,22,5.31,22z M5.34,20.49c-1.19,0-1.84-0.63-1.84-1.85V5.36c0-1.22,0.65-1.85,1.84-1.85l13.27,0.05 c1.17,0,1.83,0.64,1.83,1.85v13.28c0,1.23-0.66,1.85-1.83,1.85L5.34,20.49z M8.71,10.38c1.21,0,2.2-0.99,2.2-2.2 c0-1.21-0.99-2.21-2.2-2.21c-1.22,0-2.2,1-2.2,2.21C6.51,9.4,7.49,10.38,8.71,10.38z M4.43,21.06h14.83c1.52,0,2.24-1.08,2.24-2.98 l-5.23-6.17c-0.4-0.47-0.84-0.7-1.33-0.7c-0.49,0-0.91,0.22-1.32,0.68l-3.94,4.45l-1.62-1.87c-0.37-0.42-0.75-0.64-1.18-0.64 c-0.4,0-0.77,0.2-1.11,0.62L2.5,18.25C2.59,20.16,3.16,21.06,4.43,21.06z"/>
+          </svg>
+        </span>
         <span class="image-btn-text">
           <span class="image-btn-main">${which === "A" ? "Choose Image A" : "Choose Image B"}</span>
         </span>
@@ -1227,16 +1273,34 @@
     resetBtn.disabled = active;
   }
 
+  function clearStatusColor() {
+    statusText.classList.remove("status-success", "status-error");
+  }
+
+  function setStatus(text, tone = "") {
+    statusText.textContent = text;
+    clearStatusColor();
+    if (tone === "success") statusText.classList.add("status-success");
+    if (tone === "error") statusText.classList.add("status-error");
+  }
+
   function refreshIdleStatus() {
     if (isProcessing) return;
 
     if (imageStateA && imageStateB) {
-      statusText.textContent = "Ready to compare";
+      setStatus("Ready to compare");
     } else if (imageStateA || imageStateB) {
-      statusText.textContent = "Select the second image";
+      setStatus("Select the second image");
     } else {
-      statusText.textContent = "Waiting for images…";
+      setStatus("Waiting for images…");
     }
+  }
+
+  function setNoResultsDisplay() {
+    divergentPercentValue.textContent = "%";
+    divergentPixelsValue.textContent = "px";
+    convergentPercentValue.textContent = "%";
+    convergentPixelsValue.textContent = "px";
   }
 
   function resetComparisonOutputs() {
@@ -1245,10 +1309,7 @@
     barFill.style.width = "0%";
     rowsText.textContent = "0 / 0 rows";
     pixelsScannedText.textContent = "0 pixels";
-    divergentPercentValue.textContent = "0.0000%";
-    divergentPixelsValue.textContent = "0 px";
-    convergentPercentValue.textContent = "100.0000%";
-    convergentPixelsValue.textContent = "0 px";
+    setNoResultsDisplay();
     setIdleDiffCanvas();
   }
 
