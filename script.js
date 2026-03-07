@@ -27,6 +27,7 @@
   window.addEventListener("resize", updateAppHeight);
   window.addEventListener("orientationchange", updateAppHeight);
   window.addEventListener("pageshow", updateAppHeight);
+
   if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", updateAppHeight);
   }
@@ -40,7 +41,6 @@
 
   const fileSizeA = document.getElementById("fileSizeA");
   const fileResA = document.getElementById("fileResA");
-
   const fileSizeB = document.getElementById("fileSizeB");
   const fileResB = document.getElementById("fileResB");
 
@@ -689,7 +689,7 @@
   }
 
   function nextFrame() {
-    return new Promise(resolve => requestAnimationFrame(resolve));
+    return new Promise((resolve) => requestAnimationFrame(resolve));
   }
 
   function escapeHtml(str) {

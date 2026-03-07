@@ -5,7 +5,6 @@
   --text:#f5f5f7;
   --sub:#8e8e93;
   --line:rgba(255,255,255,0.08);
-  --line-strong:rgba(255,255,255,0.12);
   --green:#32d74b;
   --red:#ff453a;
   --shadow:0 18px 40px rgba(0,0,0,0.35);
@@ -81,7 +80,7 @@ html.mode-standalone .app{
   min-height:0;
   overflow:hidden;
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00)),
+    linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0)),
     var(--card);
   border:1px solid var(--line);
   border-radius:var(--radius-xl);
@@ -359,7 +358,7 @@ html.mode-standalone .app{
   overflow:hidden;
   background:
     linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015)),
-    linear-gradient(180deg, rgba(77,163,255,0.08), rgba(77,163,255,0.00)),
+    linear-gradient(180deg, rgba(77,163,255,0.08), rgba(77,163,255,0)),
     #12141a;
   border:1px solid rgba(255,255,255,0.16);
   box-shadow:
@@ -435,8 +434,7 @@ html.mode-standalone .app{
 }
 
 .image-btn.empty .image-btn-inner,
-.app.compact-images .image-btn.filled .image-btn-inner,
-.app:not(.compact-images) .image-btn.filled .image-btn-inner{
+.image-btn.filled .image-btn-inner{
   min-height:48px;
   padding:6px 9px 6px 13px;
   gap:8px;
@@ -525,10 +523,6 @@ html.mode-standalone .app{
   gap:6px;
 }
 
-.app.compact-images .image-meta{
-  padding:8px 10px 7px;
-}
-
 .meta-row{
   display:flex;
   justify-content:space-between;
@@ -596,7 +590,7 @@ html.mode-standalone .app{
 .fs-modal{
   position:fixed;
   inset:0;
-  background:#000000;
+  background:#000;
   z-index:9999;
   display:none;
   justify-content:center;
@@ -685,8 +679,7 @@ html.mode-standalone .app{
   }
 
   .image-btn.empty .image-btn-inner,
-  .app.compact-images .image-btn.filled .image-btn-inner,
-  .app:not(.compact-images) .image-btn.filled .image-btn-inner{
+  .image-btn.filled .image-btn-inner{
     min-height:46px;
     padding:6px 8px 6px 12px;
     gap:7px;
