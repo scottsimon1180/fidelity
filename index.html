@@ -8,21 +8,40 @@
   />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="apple-touch-icon" href="icon-IOS.png">
+  <link rel="apple-touch-icon" href="icon-IOS.png" />
 
   <title>Pixel Compare</title>
 
-  <link rel="stylesheet" href="./styles.css" />
+  <script>
+    (function () {
+      const isStandalone =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        window.navigator.standalone === true;
+
+      document.documentElement.classList.add(
+        isStandalone ? "mode-standalone" : "mode-browser"
+      );
+    })();
+  </script>
+
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div id="app" class="app">
-
     <div class="frame">
       <div class="diff-frame-wrap">
-        <div id="diffView" class="diff-view" aria-label="Comparison preview" role="button" tabindex="0">
+        <div
+          id="diffView"
+          class="diff-view"
+          aria-label="Comparison preview"
+          role="button"
+          tabindex="0"
+        >
           <div id="diffStage" class="diff-stage">
             <canvas id="diffCanvas"></canvas>
-            <div id="diffPlaceholder" class="diff-placeholder">Difference image will appear here</div>
+            <div id="diffPlaceholder" class="diff-placeholder">
+              Difference image will appear here
+            </div>
           </div>
         </div>
 
@@ -47,18 +66,18 @@
     <div class="frame">
       <div class="results-wrap">
         <div class="metric red">
-          <p class="metric-label">Divergent Pixles</p>
+          <p class="metric-label">Divergent Pixels</p>
           <div class="metric-values">
-            <p id="divergentPercentValue" class="metric-percent">–</p>
-            <p id="divergentPixelsValue" class="metric-pixels">–</p>
+            <p id="divergentPercentValue" class="metric-percent is-placeholder">0%</p>
+            <p id="divergentPixelsValue" class="metric-pixels is-placeholder">0 px</p>
           </div>
         </div>
 
         <div class="metric green">
           <p class="metric-label">Convergent Pixels</p>
           <div class="metric-values">
-            <p id="convergentPercentValue" class="metric-percent">–</p>
-            <p id="convergentPixelsValue" class="metric-pixels">–</p>
+            <p id="convergentPercentValue" class="metric-percent is-placeholder">0%</p>
+            <p id="convergentPixelsValue" class="metric-pixels is-placeholder">0 px</p>
           </div>
         </div>
       </div>
@@ -66,7 +85,6 @@
 
     <div class="frame">
       <div class="images-wrap">
-
         <div class="image-row">
           <button id="pickBtnA" class="image-btn empty" type="button" aria-label="Choose Image A">
             <span class="image-btn-inner">
@@ -120,7 +138,6 @@
             </div>
           </div>
         </div>
-
       </div>
     </div>
 
@@ -143,6 +160,6 @@
     </div>
   </div>
 
-  <script src="./script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

@@ -1,148 +1,718 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
-  />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="apple-touch-icon" href="icon-IOS.png">
+:root{
+  --bg:#0b0b0c;
+  --card:#141416;
+  --card-2:#1b1b1f;
+  --text:#f5f5f7;
+  --sub:#8e8e93;
+  --line:rgba(255,255,255,0.08);
+  --line-strong:rgba(255,255,255,0.12);
+  --green:#32d74b;
+  --red:#ff453a;
+  --shadow:0 18px 40px rgba(0,0,0,0.35);
+  --radius-xl:22px;
+  --radius-lg:16px;
+}
 
-  <title>Pixel Compare</title>
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
 
-  <link rel="stylesheet" href="css.css" />
-</head>
-<body>
-  <div id="app" class="app">
+html,
+body{
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;
+  overflow:hidden;
+}
 
-    <div class="frame">
-      <div class="diff-frame-wrap">
-        <div id="diffView" class="diff-view" aria-label="Comparison preview" role="button" tabindex="0">
-          <div id="diffStage" class="diff-stage">
-            <canvas id="diffCanvas"></canvas>
-            <div id="diffPlaceholder" class="diff-placeholder">Difference image will appear here</div>
-          </div>
-        </div>
+body{
+  min-height:100vh;
+  min-height:100dvh;
+}
 
-        <div class="progress-wrap">
-          <div class="progress-top">
-            <div id="statusText" class="status">Waiting for images…</div>
-            <div id="percentText" class="percent">0%</div>
-          </div>
+html.mode-standalone body{
+  min-height:var(--app-height, 100vh);
+}
 
-          <div class="bar" aria-label="Comparison progress">
-            <div id="barFill" class="bar-fill"></div>
-          </div>
+button,
+input,
+canvas,
+img{
+  font:inherit;
+}
 
-          <div class="progress-bottom">
-            <div id="rowsText">0 / 0 rows</div>
-            <div id="pixelsScannedText">0 pixels</div>
-          </div>
-        </div>
-      </div>
-    </div>
+button,
+input{
+  touch-action:manipulation;
+}
 
-    <div class="frame">
-      <div class="results-wrap">
-        <div class="metric red">
-          <p class="metric-label">Divergent Pixles</p>
-          <div class="metric-values">
-            <p id="divergentPercentValue" class="metric-percent">–</p>
-            <p id="divergentPixelsValue" class="metric-pixels">–</p>
-          </div>
-        </div>
+.app{
+  width:100%;
+  max-width:430px;
+  height:100vh;
+  height:100dvh;
+  margin:0 auto;
+  padding:
+    max(10px, env(safe-area-inset-top))
+    12px
+    max(10px, env(safe-area-inset-bottom))
+    12px;
+  display:grid;
+  grid-template-rows:
+    minmax(0, 1fr)
+    auto
+    auto
+    auto;
+  gap:10px;
+  overflow:hidden;
+}
 
-        <div class="metric green">
-          <p class="metric-label">Convergent Pixels</p>
-          <div class="metric-values">
-            <p id="convergentPercentValue" class="metric-percent">–</p>
-            <p id="convergentPixelsValue" class="metric-pixels">–</p>
-          </div>
-        </div>
-      </div>
-    </div>
+html.mode-standalone .app{
+  height:var(--app-height, 100vh);
+}
 
-    <div class="frame">
-      <div class="images-wrap">
+.frame{
+  min-width:0;
+  min-height:0;
+  overflow:hidden;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00)),
+    var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius-xl);
+  box-shadow:var(--shadow);
+}
 
-        <div class="image-row">
-          <button id="pickBtnA" class="image-btn empty" type="button" aria-label="Choose Image A">
-            <span class="image-btn-inner">
-              <span class="image-empty-icon" aria-hidden="true">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="1 1 21.96 22.05" preserveAspectRatio="xMidYMid meet">
-                  <path d="M5.31,22l13.33,0.05c2.2,0,3.32-1.11,3.32-3.28V5.33c0-2.17-1.11-3.28-3.32-3.28L5.31,2C3.11,2,2,3.11,2,5.28v13.44 C2,20.9,3.11,22,5.31,22z M5.34,20.49c-1.19,0-1.84-0.63-1.84-1.85V5.36c0-1.22,0.65-1.85,1.84-1.85l13.27,0.05 c1.17,0,1.83,0.64,1.83,1.85v13.28c0,1.23-0.66,1.85-1.83,1.85L5.34,20.49z M8.71,10.38c1.21,0,2.2-0.99,2.2-2.2 c0-1.21-0.99-2.21-2.2-2.21c-1.22,0-2.2,1-2.2,2.21C6.51,9.4,7.49,10.38,8.71,10.38z M4.43,21.06h14.83c1.52,0,2.24-1.08,2.24-2.98 l-5.23-6.17c-0.4-0.47-0.84-0.7-1.33-0.7c-0.49,0-0.91,0.22-1.32,0.68l-3.94,4.45l-1.62-1.87c-0.37-0.42-0.75-0.64-1.18-0.64 c-0.4,0-0.77,0.2-1.11,0.62L2.5,18.25C2.59,20.16,3.16,21.06,4.43,21.06z"/>
-                </svg>
-              </span>
-              <span class="image-btn-text">
-                <span class="image-btn-main">Choose Image A</span>
-              </span>
-            </span>
-          </button>
-          <input id="fileInputA" type="file" class="hidden-input" accept="image/*" />
+/* Frame 1 */
+.diff-frame-wrap{
+  height:100%;
+  min-height:0;
+  padding:10px;
+  display:grid;
+  grid-template-rows:minmax(0, 1fr) auto;
+  gap:10px;
+}
 
-          <div class="image-meta">
-            <div class="meta-row">
-              <div class="meta-key">Size</div>
-              <div id="fileSizeA" class="meta-value empty"></div>
-            </div>
-            <div class="meta-row">
-              <div class="meta-key">Res</div>
-              <div id="fileResA" class="meta-value empty"></div>
-            </div>
-          </div>
-        </div>
+.diff-view{
+  min-width:0;
+  min-height:0;
+  position:relative;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
 
-        <div class="image-row">
-          <button id="pickBtnB" class="image-btn empty" type="button" aria-label="Choose Image B">
-            <span class="image-btn-inner">
-              <span class="image-empty-icon" aria-hidden="true">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="1 1 21.96 22.05" preserveAspectRatio="xMidYMid meet">
-                  <path d="M5.31,22l13.33,0.05c2.2,0,3.32-1.11,3.32-3.28V5.33c0-2.17-1.11-3.28-3.32-3.28L5.31,2C3.11,2,2,3.11,2,5.28v13.44 C2,20.9,3.11,22,5.31,22z M5.34,20.49c-1.19,0-1.84-0.63-1.84-1.85V5.36c0-1.22,0.65-1.85,1.84-1.85l13.27,0.05 c1.17,0,1.83,0.64,1.83,1.85v13.28c0,1.23-0.66,1.85-1.83,1.85L5.34,20.49z M8.71,10.38c1.21,0,2.2-0.99,2.2-2.2 c0-1.21-0.99-2.21-2.2-2.21c-1.22,0-2.2,1-2.2,2.21C6.51,9.4,7.49,10.38,8.71,10.38z M4.43,21.06h14.83c1.52,0,2.24-1.08,2.24-2.98 l-5.23-6.17c-0.4-0.47-0.84-0.7-1.33-0.7c-0.49,0-0.91,0.22-1.32,0.68l-3.94,4.45l-1.62-1.87c-0.37-0.42-0.75-0.64-1.18-0.64 c-0.4,0-0.77,0.2-1.11,0.62L2.5,18.25C2.59,20.16,3.16,21.06,4.43,21.06z"/>
-                </svg>
-              </span>
-              <span class="image-btn-text">
-                <span class="image-btn-main">Choose Image B</span>
-              </span>
-            </span>
-          </button>
-          <input id="fileInputB" type="file" class="hidden-input" accept="image/*" />
+.diff-stage{
+  position:relative;
+  width:100%;
+  height:100%;
+  max-width:100%;
+  max-height:100%;
+  background:#0d0d0f;
+  border:1px solid var(--line);
+  border-radius:16px;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+}
 
-          <div class="image-meta">
-            <div class="meta-row">
-              <div class="meta-key">Size</div>
-              <div id="fileSizeB" class="meta-value empty"></div>
-            </div>
-            <div class="meta-row">
-              <div class="meta-key">Res</div>
-              <div id="fileResB" class="meta-value empty"></div>
-            </div>
-          </div>
-        </div>
+.diff-stage canvas{
+  width:100%;
+  height:100%;
+  display:block;
+  image-rendering:pixelated;
+  image-rendering:crisp-edges;
+}
 
-      </div>
-    </div>
+.diff-placeholder{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:16px;
+  color:var(--sub);
+  font-size:13px;
+  line-height:1.35;
+  pointer-events:none;
+}
 
-    <div class="actions">
-      <button id="compareBtn" class="action-btn action-primary" type="button" disabled>Compare</button>
-      <button id="resetBtn" class="action-btn action-danger" type="button">Reset</button>
-    </div>
-  </div>
+.progress-wrap{
+  display:grid;
+  gap:7px;
+}
 
-  <div id="fsModal" class="fs-modal" aria-hidden="true">
-    <button id="fsCloseBtn" class="fs-close-btn" type="button" aria-label="Close fullscreen viewer">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"></line>
-        <line x1="6" y1="6" x2="18" y2="18"></line>
-      </svg>
-    </button>
+.progress-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+  font-size:13px;
+  line-height:1;
+}
 
-    <div id="fsWrapper" class="fs-image-wrapper">
-      <canvas id="fsCanvas" class="fs-image" aria-label="Comparison image fullscreen"></canvas>
-    </div>
-  </div>
+.status{
+  min-width:0;
+  flex:1 1 auto;
+  color:var(--sub);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  transition:color 0.18s ease;
+}
 
-  <script src="js.js"></script>
-</body>
-</html>
+.status.status-success{
+  color:var(--green);
+}
+
+.status.status-error{
+  color:var(--red);
+}
+
+.percent{
+  flex:0 0 auto;
+  color:var(--text);
+  font-weight:700;
+  font-variant-numeric:tabular-nums;
+}
+
+.bar{
+  width:100%;
+  height:12px;
+  border-radius:999px;
+  background:#0d0d0f;
+  border:1px solid var(--line);
+  overflow:hidden;
+}
+
+.bar-fill{
+  width:0%;
+  height:100%;
+  border-radius:999px;
+  background:linear-gradient(
+    90deg,
+    rgba(50,215,75,0.88) 0%,
+    rgba(50,215,75,1) 48%,
+    rgba(120,255,145,0.96) 100%
+  );
+  box-shadow:0 0 20px rgba(50,215,75,0.28);
+  transition:width 0.08s linear;
+}
+
+.progress-bottom{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+  color:var(--sub);
+  font-size:12px;
+  font-variant-numeric:tabular-nums;
+}
+
+.progress-bottom > div{
+  min-width:0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* Frame 2 */
+.results-wrap{
+  height:100%;
+  min-height:0;
+  padding:10px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  align-content:end;
+}
+
+.metric{
+  min-width:0;
+  min-height:110px;
+  overflow:hidden;
+  border-radius:16px;
+  padding:14px 10px 13px;
+  display:grid;
+  grid-template-rows:auto 1fr;
+  align-items:stretch;
+  gap:8px;
+  background:#0d0d0f;
+  border:1px solid var(--line);
+}
+
+.metric.red{
+  border-color:rgba(255,69,58,0.18);
+  background:linear-gradient(180deg, rgba(255,69,58,0.04), rgba(255,69,58,0.01));
+}
+
+.metric.green{
+  border-color:rgba(50,215,75,0.18);
+  background:linear-gradient(180deg, rgba(50,215,75,0.04), rgba(50,215,75,0.01));
+}
+
+.metric-label{
+  margin:0;
+  color:var(--sub);
+  font-size:11px;
+  line-height:1.1;
+  font-weight:800;
+  letter-spacing:0.05em;
+  text-transform:uppercase;
+  text-align:center;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.metric-values{
+  min-width:0;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  text-align:center;
+}
+
+.metric-percent{
+  margin:0;
+  min-width:0;
+  font-size:clamp(22px, 6vw, 34px);
+  line-height:1;
+  font-weight:800;
+  letter-spacing:-0.03em;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.metric-pixels{
+  margin:0;
+  min-width:0;
+  font-size:clamp(14px, 4vw, 20px);
+  line-height:1.1;
+  font-weight:700;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.metric.red .metric-percent,
+.metric.red .metric-pixels{
+  color:var(--red);
+}
+
+.metric.green .metric-percent,
+.metric.green .metric-pixels{
+  color:var(--green);
+}
+
+.metric-percent.is-placeholder,
+.metric-pixels.is-placeholder{
+  color:var(--sub) !important;
+  opacity:0.55;
+}
+
+/* Frame 3 */
+.images-wrap{
+  padding:10px;
+  display:grid;
+  grid-template-rows:auto auto;
+  gap:10px;
+  align-content:end;
+}
+
+.image-row{
+  min-width:0;
+  display:grid;
+  grid-template-columns:minmax(0, 1.48fr) minmax(92px, 0.82fr);
+  gap:10px;
+  align-items:stretch;
+}
+
+.image-btn{
+  appearance:none;
+  position:relative;
+  isolation:isolate;
+  border:none;
+  width:100%;
+  min-width:0;
+  border-radius:18px;
+  cursor:pointer;
+  display:block;
+  overflow:hidden;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015)),
+    linear-gradient(180deg, rgba(77,163,255,0.08), rgba(77,163,255,0.00)),
+    #12141a;
+  border:1px solid rgba(255,255,255,0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    inset 0 -1px 0 rgba(0,0,0,0.32),
+    0 8px 20px rgba(0,0,0,0.22);
+  padding:0;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.08s ease,
+    filter 0.08s ease,
+    opacity 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.image-btn::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  pointer-events:none;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,0.02);
+  z-index:0;
+}
+
+.image-btn:active,
+.action-btn:active,
+.fs-close-btn:active{
+  transform:scale(0.995);
+  filter:brightness(0.97);
+}
+
+.image-btn:disabled,
+.action-btn:disabled{
+  opacity:0.45;
+  cursor:not-allowed;
+}
+
+.image-btn.empty{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02)),
+    linear-gradient(180deg, rgba(77,163,255,0.10), rgba(77,163,255,0.02)),
+    #141821;
+  border-color:rgba(255,255,255,0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.07),
+    inset 0 -1px 0 rgba(0,0,0,0.32),
+    0 10px 24px rgba(0,0,0,0.24);
+}
+
+.image-btn.filled{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.02)),
+    linear-gradient(180deg, rgba(77,163,255,0.09), rgba(77,163,255,0.015)),
+    #11151d;
+  border-color:rgba(255,255,255,0.17);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    inset 0 -1px 0 rgba(0,0,0,0.32),
+    0 10px 24px rgba(0,0,0,0.22);
+}
+
+.image-btn-inner{
+  position:relative;
+  z-index:1;
+  width:100%;
+  min-width:0;
+  display:grid;
+  grid-template-columns:auto 1fr;
+  align-items:center;
+  gap:10px;
+}
+
+.image-btn.empty .image-btn-inner,
+.app.compact-images .image-btn.filled .image-btn-inner,
+.app:not(.compact-images) .image-btn.filled .image-btn-inner{
+  min-height:48px;
+  padding:6px 9px 6px 13px;
+  gap:8px;
+}
+
+.image-thumb,
+.image-empty-icon{
+  width:38px;
+  height:38px;
+  border-radius:11px;
+  overflow:hidden;
+  flex:0 0 auto;
+}
+
+.image-thumb{
+  background:#09090b;
+  border:1px solid rgba(255,255,255,0.10);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    0 3px 10px rgba(0,0,0,0.28);
+}
+
+.image-thumb img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+}
+
+.image-empty-icon{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--text);
+}
+
+.image-empty-icon svg{
+  width:26.4px;
+  height:26.4px;
+  display:block;
+  fill:currentColor;
+  opacity:0.96;
+}
+
+.image-btn-text{
+  min-width:0;
+  text-align:left;
+  display:grid;
+  gap:2px;
+}
+
+.image-btn-main{
+  color:var(--text);
+  font-size:13px;
+  line-height:1.2;
+  font-weight:780;
+  letter-spacing:-0.01em;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.image-btn-sub{
+  color:#a6b3c7;
+  font-size:11px;
+  line-height:1.15;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.image-btn.empty .image-btn-main{
+  font-size:16px;
+  font-weight:800;
+  letter-spacing:-0.015em;
+}
+
+.image-meta{
+  min-width:0;
+  border-radius:16px;
+  padding:10px 10px 8px;
+  background:var(--card-2);
+  border:1px solid var(--line);
+  display:grid;
+  align-content:center;
+  gap:6px;
+}
+
+.app.compact-images .image-meta{
+  padding:8px 10px 7px;
+}
+
+.meta-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:8px;
+  min-width:0;
+  font-size:11px;
+  line-height:1.15;
+}
+
+.meta-key{
+  color:var(--sub);
+  flex:0 0 auto;
+}
+
+.meta-value{
+  min-width:0;
+  text-align:right;
+  color:var(--text);
+  word-break:break-word;
+}
+
+.meta-value.empty{
+  color:transparent;
+}
+
+/* Actions */
+.actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  align-self:end;
+}
+
+.action-btn{
+  appearance:none;
+  border:none;
+  height:48px;
+  min-height:48px;
+  border-radius:15px;
+  font-size:15px;
+  font-weight:800;
+  cursor:pointer;
+  transition:
+    transform 0.08s ease,
+    filter 0.08s ease,
+    opacity 0.18s ease;
+}
+
+.action-primary{
+  background:var(--green);
+  color:#07110a;
+}
+
+.action-danger{
+  background:#2c1a1a;
+  color:#ff8b84;
+}
+
+.hidden-input{
+  display:none;
+}
+
+/* Fullscreen modal */
+.fs-modal{
+  position:fixed;
+  inset:0;
+  background:#000000;
+  z-index:9999;
+  display:none;
+  justify-content:center;
+  align-items:center;
+  overflow:hidden;
+  opacity:0;
+  transition:opacity 0.3s ease;
+  touch-action:none;
+}
+
+.fs-modal.active{
+  display:flex;
+  opacity:1;
+}
+
+.fs-close-btn{
+  position:absolute;
+  top:calc(env(safe-area-inset-top) + 20px);
+  right:20px;
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  background:rgba(255,255,255,0.2);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  border:none;
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:10000;
+  cursor:pointer;
+}
+
+.fs-image-wrapper{
+  width:100%;
+  height:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  transform-origin:center center;
+  will-change:transform;
+}
+
+.fs-image{
+  max-width:100%;
+  max-height:100%;
+  width:auto;
+  height:auto;
+  display:block;
+  image-rendering:pixelated;
+  image-rendering:crisp-edges;
+  user-select:none;
+  -webkit-user-drag:none;
+  pointer-events:none;
+}
+
+@media (max-width:380px){
+  .app{
+    padding:
+      max(8px, env(safe-area-inset-top))
+      10px
+      max(8px, env(safe-area-inset-bottom))
+      10px;
+    gap:8px;
+  }
+
+  .diff-frame-wrap,
+  .results-wrap,
+  .images-wrap{
+    padding:8px;
+    gap:8px;
+  }
+
+  .metric-percent{
+    font-size:clamp(20px, 5.8vw, 30px);
+  }
+
+  .metric-pixels{
+    font-size:clamp(13px, 3.8vw, 18px);
+  }
+
+  .image-row{
+    grid-template-columns:minmax(0, 1.36fr) minmax(82px, 0.84fr);
+    gap:8px;
+  }
+
+  .image-btn.empty .image-btn-inner,
+  .app.compact-images .image-btn.filled .image-btn-inner,
+  .app:not(.compact-images) .image-btn.filled .image-btn-inner{
+    min-height:46px;
+    padding:6px 8px 6px 12px;
+    gap:7px;
+  }
+
+  .image-thumb,
+  .image-empty-icon{
+    width:34px;
+    height:34px;
+  }
+
+  .image-empty-icon svg{
+    width:24.2px;
+    height:24.2px;
+  }
+
+  .image-btn.empty .image-btn-main{
+    font-size:15px;
+  }
+
+  .image-btn-main{
+    font-size:12px;
+  }
+
+  .action-btn{
+    height:46px;
+    min-height:46px;
+  }
+}

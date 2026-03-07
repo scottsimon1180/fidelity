@@ -1,6 +1,36 @@
 (() => {
   "use strict";
 
+  function isStandaloneMode() {
+    return (
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone === true
+    );
+  }
+
+  function getViewportHeight() {
+    if (window.visualViewport && Number.isFinite(window.visualViewport.height)) {
+      return window.visualViewport.height;
+    }
+    return window.innerHeight;
+  }
+
+  function updateAppHeight() {
+    const standalone = isStandaloneMode();
+
+    document.documentElement.classList.toggle("mode-standalone", standalone);
+    document.documentElement.classList.toggle("mode-browser", !standalone);
+    document.documentElement.style.setProperty("--app-height", `${Math.round(getViewportHeight())}px`);
+  }
+
+  updateAppHeight();
+  window.addEventListener("resize", updateAppHeight);
+  window.addEventListener("orientationchange", updateAppHeight);
+  window.addEventListener("pageshow", updateAppHeight);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", updateAppHeight);
+  }
+
   const app = document.getElementById("app");
 
   const pickBtnA = document.getElementById("pickBtnA");
@@ -9,10 +39,10 @@
   const fileInputB = document.getElementById("fileInputB");
 
   const fileSizeA = document.getElementById("fileSizeA");
-  const fileResA  = document.getElementById("fileResA");
+  const fileResA = document.getElementById("fileResA");
 
   const fileSizeB = document.getElementById("fileSizeB");
-  const fileResB  = document.getElementById("fileResB");
+  const fileResB = document.getElementById("fileResB");
 
   const statusText = document.getElementById("statusText");
   const percentText = document.getElementById("percentText");
@@ -156,7 +186,7 @@
     } catch (error) {
       console.error(error);
       clearImageUI(which);
-      setStatus("Failed to load image");
+      setStatus("Failed to load image", "error");
       return null;
     }
   }
@@ -208,12 +238,12 @@
     const heightB = imageStateB.height;
 
     if (widthA !== widthB || heightA !== heightB) {
-      setStatus("Resolution mismatch");
+      setStatus("Resolution mismatch", "error");
       percentText.textContent = "0%";
       barFill.style.width = "0%";
       rowsText.textContent = "0 / 0 rows";
       pixelsScannedText.textContent = "0 pixels";
-      setNoResultsDisplay();
+      setResultsInactive();
       setIdleDiffCanvas();
       isProcessing = false;
       setButtonsDuringProcessing(false);
@@ -254,19 +284,19 @@
 
           for (let x = 0; x < widthA; x++, rowIndex += 4) {
             const different =
-              dataA[rowIndex]     !== dataB[rowIndex] ||
+              dataA[rowIndex] !== dataB[rowIndex] ||
               dataA[rowIndex + 1] !== dataB[rowIndex + 1] ||
               dataA[rowIndex + 2] !== dataB[rowIndex + 2] ||
               dataA[rowIndex + 3] !== dataB[rowIndex + 3];
 
             if (different) {
               differingPixels++;
-              diffData[rowIndex]     = 255;
+              diffData[rowIndex] = 255;
               diffData[rowIndex + 1] = 0;
               diffData[rowIndex + 2] = 0;
               diffData[rowIndex + 3] = 255;
             } else {
-              diffData[rowIndex]     = 50;
+              diffData[rowIndex] = 50;
               diffData[rowIndex + 1] = 215;
               diffData[rowIndex + 2] = 75;
               diffData[rowIndex + 3] = 255;
@@ -295,7 +325,7 @@
       if (differingPixels === 0) {
         setStatus("Perfect Match", "success");
       } else {
-        setStatus("Differenses found", "error");
+        setStatus("Differences found", "error");
       }
 
       percentText.textContent = "100%";
@@ -303,19 +333,20 @@
       rowsText.textContent = `${heightA} / ${heightA} rows`;
       pixelsScannedText.textContent = `${formatNumber(totalPixels)} pixels`;
 
-      divergentPercentValue.textContent = `${divergentPercent.toFixed(4)}%`;
-      divergentPixelsValue.textContent = `${formatNumber(differingPixels)} px`;
-
-      convergentPercentValue.textContent = `${convergentPercent.toFixed(4)}%`;
-      convergentPixelsValue.textContent = `${formatNumber(convergentPixels)} px`;
+      setResultsActive({
+        divergentPercent: `${divergentPercent.toFixed(4)}%`,
+        divergentPixels: `${formatNumber(differingPixels)} px`,
+        convergentPercent: `${convergentPercent.toFixed(4)}%`,
+        convergentPixels: `${formatNumber(convergentPixels)} px`
+      });
 
       if (fsModal.classList.contains("active")) {
         syncFullscreenCanvas();
       }
     } catch (error) {
       console.error(error);
-      setStatus("Comparison failed");
-      setNoResultsDisplay();
+      setStatus("Comparison failed", "error");
+      setResultsInactive();
       setIdleDiffCanvas();
     } finally {
       isProcessing = false;
@@ -433,11 +464,28 @@
     }
   }
 
-  function setNoResultsDisplay() {
-    divergentPercentValue.textContent = "–";
-    divergentPixelsValue.textContent = "–";
-    convergentPercentValue.textContent = "–";
-    convergentPixelsValue.textContent = "–";
+  function setResultsInactive() {
+    divergentPercentValue.textContent = "0%";
+    divergentPixelsValue.textContent = "0 px";
+    convergentPercentValue.textContent = "0%";
+    convergentPixelsValue.textContent = "0 px";
+
+    divergentPercentValue.classList.add("is-placeholder");
+    divergentPixelsValue.classList.add("is-placeholder");
+    convergentPercentValue.classList.add("is-placeholder");
+    convergentPixelsValue.classList.add("is-placeholder");
+  }
+
+  function setResultsActive(values) {
+    divergentPercentValue.textContent = values.divergentPercent;
+    divergentPixelsValue.textContent = values.divergentPixels;
+    convergentPercentValue.textContent = values.convergentPercent;
+    convergentPixelsValue.textContent = values.convergentPixels;
+
+    divergentPercentValue.classList.remove("is-placeholder");
+    divergentPixelsValue.classList.remove("is-placeholder");
+    convergentPercentValue.classList.remove("is-placeholder");
+    convergentPixelsValue.classList.remove("is-placeholder");
   }
 
   function resetComparisonOutputs() {
@@ -446,7 +494,7 @@
     barFill.style.width = "0%";
     rowsText.textContent = "0 / 0 rows";
     pixelsScannedText.textContent = "0 pixels";
-    setNoResultsDisplay();
+    setResultsInactive();
     setIdleDiffCanvas();
   }
 
@@ -515,8 +563,6 @@
     diffStage.style.width = "100%";
     diffStage.style.height = "100%";
   }
-
-  /* Fullscreen viewer */
 
   function syncFullscreenCanvas() {
     if (diffCanvas.width <= 1 || diffCanvas.height <= 1) return;
